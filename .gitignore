@@ -1,0 +1,58 @@
+# ---------------------------------------------------------------------------
+# SnapBuy - monorepo gitignore
+# ---------------------------------------------------------------------------
+
+# ------------------------------------------------------------------ secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ------------------------------------------------------------------ python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.python-version
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# ---------------------------------------------------------------- javascript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.eslintcache
+.oxlintcache
+*.tsbuildinfo
+vite.config.ts.timestamp-*
+
+# ------------------------------------------------------------------- builds
+dist/
+build/
+out/
+.next/
+coverage/
+
+# ---------------------------------------------------------------- editors/os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ------------------------------------------------------------------- runtime
+*.log
+logs/
+uploads/
+tmp/
+.DS_Store
