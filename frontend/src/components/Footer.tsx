@@ -2,6 +2,9 @@ import { Link } from 'react-router-dom'
 import { CodeXml, Sparkles } from 'lucide-react'
 import { Logo } from './Logo'
 
+// Evaluated once per app load instead of during render (keeps render pure).
+const CURRENT_YEAR = new Date().getFullYear()
+
 export function Footer() {
   return (
     <footer className="border-ink-100 mt-24 border-t bg-white">
@@ -77,7 +80,7 @@ export function Footer() {
 
       <div className="border-ink-100 border-t">
         <div className="container-page text-ink-400 flex flex-col gap-2 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} SnapBuy. Prices and availability come from live search results and may change.</p>
+          <p>© {CURRENT_YEAR} SnapBuy. Prices and availability come from live search results and may change.</p>
           <p>Product identification by AI · Search results by SerpApi</p>
         </div>
       </div>

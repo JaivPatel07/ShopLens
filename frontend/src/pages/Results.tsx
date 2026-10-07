@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AlertTriangle, ArrowLeft, Filter as FilterIcon, Info, RefreshCw, Search } from 'lucide-react'
-import { useProductFlow } from '../context/ProductFlowContext'
+import { useProductFlow } from '../context/productFlow'
 import { FilterBar } from '../components/FilterBar'
 import { ProductGrid } from '../components/ProductGrid'
 import { PriceComparison } from '../components/PriceComparison'
 import { BestDealCard } from '../components/BestDealCard'
 import { SearchSummary } from '../components/SearchSummary'
-import { RefineSearch, buildRefinements } from '../components/RefineSearch'
+import { RefineSearch } from '../components/RefineSearch'
+import { buildRefinements } from '../lib/search'
 import { ImagePreview } from '../components/ImagePreview'
 import { LoadingState } from '../components/LoadingState'
 import { ErrorState } from '../components/ErrorState'
@@ -28,15 +29,20 @@ export default function Results() {
   const flow = useProductFlow()
   const navigate = useNavigate()
   const { addEntry } = useSearchHistory()
-  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
 
   const search = flow.search
-  const products = search?.products ?? []
+  // Stable reference so the memos below only re-run when the result set changes.
+  const products = useMemo(() => search?.products ?? [], [search])
 
-  // Reset filters whenever a new result set arrives.
-  useEffect(() => {
-    setFilters(DEFAULT_FILTERS)
-  }, [search?.query, search?.created_at])
+  // Filters are remembered per query: a fresh result set simply falls back to
+  // the defaults, without needing an effect to reset state.
+  const [filterState, setFilterState] = useState<{ forQuery: string; filters: FilterState }>({
+    forQuery: '',
+    filters: DEFAULT_FILTERS,
+  })
+  const resultKey = search?.query ?? ''
+  const filters = filterState.forQuery === resultKey ? filterState.filters : DEFAULT_FILTERS
+  const setFilters = (next: FilterState) => setFilterState({ forQuery: resultKey, filters: next })
 
   const filtered = useMemo(
     () => applyFilters(products, filters, search?.best_deal?.product?.id ?? null),
@@ -133,14 +139,18 @@ export default function Results() {
 
               <div className="text-ink-600 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                 <span>
-                  {flow.isSearching ? (
-                    'Searching…'
-                  ) : (
-                    <>
-                      <strong className="text-ink-900 font-semibold">{search?.summary.count ?? 0}</strong>{' '}
-                      products found
-                    </>
-                  )}
+                  {flow.isSearching
+                    ? 'Searching…'
+                    : flow.searchStatus === 'error'
+                      ? 'The search did not complete'
+                      : (
+                        <>
+                          <strong className="text-ink-900 font-semibold">
+                            {search?.summary.count ?? 0}
+                          </strong>{' '}
+                          products found
+                        </>
+                      )}
                 </span>
                 {search?.summary.seller_count ? (
                   <span>· {search.summary.seller_count} sellers</span>
@@ -325,6 +335,7 @@ export default function Results() {
             )}
 
             <RefineSearch
+              key={search.query}
               query={search.query}
               onRefine={handleSearch}
               loading={flow.isSearching}

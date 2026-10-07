@@ -3,6 +3,7 @@ import { Check, RotateCcw, SlidersHorizontal, Star, X } from 'lucide-react'
 import type { FilterState, SortOption } from '../types/product'
 import { cx, formatPrice } from '../lib/format'
 import { DEFAULT_FILTERS } from '../lib/filters'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 
 interface FilterBarProps {
   filters: FilterState
@@ -26,8 +27,6 @@ const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
 
 const RATING_OPTIONS = [4.5, 4, 3.5, 3]
 
-export { DEFAULT_FILTERS }
-
 export function FilterBar({
   filters,
   onChange,
@@ -40,6 +39,11 @@ export function FilterBar({
   className,
 }: FilterBarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+  // The drawer belongs to the mobile layout only: deriving this (instead of
+  // syncing with an effect) means resizing to desktop simply hides it.
+  const drawerVisible = drawerOpen && !isDesktop
+
   const activeCount = useMemo(() => {
     let count = 0
     if (filters.minPrice !== null || filters.maxPrice !== null) count += 1
@@ -186,7 +190,7 @@ export function FilterBar({
           <button
             type="button"
             className="btn-secondary lg:hidden"
-            aria-expanded={drawerOpen}
+            aria-expanded={drawerVisible}
             aria-controls="filter-drawer"
             onClick={() => setDrawerOpen(true)}
           >
@@ -200,7 +204,7 @@ export function FilterBar({
       <div className="mt-5 hidden lg:block">{controls}</div>
 
       {/* Mobile: bottom-sheet drawer */}
-      {drawerOpen && (
+      {drawerVisible && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
           <button
             type="button"

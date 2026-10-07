@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Info, PencilLine, Search, Sparkles } from 'lucide-react'
 import type { VisionAttributes } from '../types/product'
 import { cx } from '../lib/format'
@@ -26,11 +26,9 @@ export function ProductIdentification({
   className,
 }: ProductIdentificationProps) {
   const [editing, setEditing] = useState(false)
+  // The draft only exists while editing, so it is seeded when editing starts
+  // rather than kept in sync with an effect.
   const [draft, setDraft] = useState(query)
-
-  useEffect(() => {
-    setDraft(query)
-  }, [query])
 
   const confidencePercent =
     analysis.confidence === null ? null : Math.round(analysis.confidence * 100)
@@ -113,7 +111,14 @@ export function ProductIdentification({
           </label>
           <button
             type="button"
-            onClick={() => (editing ? commit() : setEditing(true))}
+            onClick={() => {
+              if (editing) {
+                commit()
+              } else {
+                setDraft(query || analysis.search_query)
+                setEditing(true)
+              }
+            }}
             className="btn-ghost !px-2 !py-1 text-xs"
             aria-label={editing ? 'Save search query' : 'Edit search query'}
           >

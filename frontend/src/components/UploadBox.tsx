@@ -71,19 +71,15 @@ export function UploadBox({
 
   return (
     <div className={className}>
+      {/* The whole panel is clickable for mouse users, but the real controls are
+          the buttons inside it - that keeps the ARIA tree valid (no nested
+          `button` roles) while staying fully keyboard operable. */}
       <div
-        role="button"
-        tabIndex={disabled ? -1 : 0}
-        aria-disabled={disabled}
+        role="group"
         aria-describedby={descriptionId}
-        aria-label="Upload a product photo. Drop a file here or press Enter to browse."
+        aria-label="Upload a product photo"
+        aria-disabled={disabled}
         onClick={openPicker}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault()
-            openPicker()
-          }
-        }}
         onDragOver={(event) => {
           event.preventDefault()
           if (!disabled) setDragging(true)
@@ -100,6 +96,7 @@ export function UploadBox({
         }}
         className={cx(
           'group relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed px-6 py-12 text-center transition duration-300 sm:py-16',
+          !disabled && 'cursor-pointer',
           dragging
             ? 'border-brand-500 bg-brand-50/70 scale-[1.01]'
             : 'border-ink-200 bg-ink-50/40 hover:border-brand-300 hover:bg-brand-50/40',

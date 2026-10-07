@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Search, Sparkles } from 'lucide-react'
 import { cx } from '../lib/format'
 
@@ -11,8 +11,6 @@ interface RefineSearchProps {
   className?: string
 }
 
-const PREFIX = 'show only '
-
 /**
  * Refine the query and run another SerpApi search without re-uploading the photo.
  */
@@ -23,11 +21,9 @@ export function RefineSearch({
   suggestions = [],
   className,
 }: RefineSearchProps) {
+  // Seeded from the current query; the parent remounts this component
+  // (key={query}) whenever a new search changes it.
   const [value, setValue] = useState(query)
-
-  useEffect(() => {
-    setValue(query)
-  }, [query])
 
   const submit = (next: string) => {
     const cleaned = next.trim()
@@ -97,18 +93,3 @@ export function RefineSearch({
   )
 }
 
-/** Build "show only <attribute>" style suggestions from recognised attributes. */
-export function buildRefinements(baseQuery: string, attributes: string[]): string[] {
-  const base = baseQuery.trim()
-  return attributes
-    .slice(0, 4)
-    .map((attribute) => `${base} ${attribute}`.replace(/\s+/g, ' ').trim())
-    .filter((suggestion) => suggestion.toLowerCase() !== base.toLowerCase())
-    .slice(0, 3)
-    .map((suggestion) => {
-      // Keep the suggestion short and natural for the chip UI.
-      return suggestion.length > 64 ? `${base} ${suggestion.split(' ').pop() ?? ''}`.trim() : suggestion
-    })
-}
-
-export { PREFIX }

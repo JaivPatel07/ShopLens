@@ -11,7 +11,6 @@ const NAV_LINKS = [
 ]
 
 export function Navbar() {
-  const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
@@ -23,10 +22,11 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Close the mobile menu on navigation.
-  useEffect(() => {
-    setOpen(false)
-  }, [location.pathname, location.hash])
+  // The menu is tied to the location it was opened at, so navigating (or using
+  // the toggle) closes it without needing an effect.
+  const [menu, setMenu] = useState({ open: false, at: location.key })
+  const open = menu.open && menu.at === location.key
+  const setOpen = (value: boolean) => setMenu({ open: value, at: location.key })
 
   const handleTrySnapBuy = () => {
     setOpen(false)
@@ -94,7 +94,7 @@ export function Navbar() {
             aria-expanded={open}
             aria-controls="mobile-menu"
             aria-label={open ? 'Close menu' : 'Open menu'}
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => setOpen(!open)}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>

@@ -11,7 +11,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { Logo } from '../components/Logo'
-import { useAppConfig } from '../context/AppConfigContext'
+import { useAppConfig } from '../context/appConfig'
 import { DemoBadge } from '../components/DemoBadge'
 
 const STACK = [

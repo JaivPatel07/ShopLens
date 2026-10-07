@@ -28,11 +28,10 @@ describe('UploadBox', () => {
     const onSelect = vi.fn()
     render(<UploadBox onSelect={onSelect} />)
 
-    const dropzone = screen.getByRole('button', { name: /upload a product photo/i })
+    const dropzone = screen.getByRole('group', { name: /upload a product photo/i })
     const file = makeImageFile()
     const dataTransfer = { files: [file] }
 
-    await userEvent.click(dropzone) // focus + open picker (no-op without files)
     dropzone.dispatchEvent(
       Object.assign(new Event('drop', { bubbles: true, cancelable: true }), { dataTransfer }),
     )
@@ -55,14 +54,22 @@ describe('UploadBox', () => {
     expect(onSelect).not.toHaveBeenCalled()
   })
 
-  it('is keyboard operable', async () => {
+  it('exposes an accessible file input and keyboard-focusable controls', async () => {
     const onSelect = vi.fn()
     render(<UploadBox onSelect={onSelect} />)
-    const dropzone = screen.getByRole('button', { name: /upload a product photo/i })
-    dropzone.focus()
-    expect(dropzone).toHaveFocus()
-    await userEvent.keyboard('{Enter}')
-    expect(onSelect).not.toHaveBeenCalled() // opens the picker, no file chosen
+
+    // Real buttons (not nested inside a button role) for keyboard/AT users.
+    const chooseButton = screen.getByRole('button', { name: /choose image/i })
+    chooseButton.focus()
+    expect(chooseButton).toHaveFocus()
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    expect(input).toBeTruthy()
+    expect(input.accept).toContain('.jpg')
+
+    // Choosing the same file through the input still routes through onSelect.
+    await userEvent.upload(input, makeImageFile())
+    expect(onSelect).toHaveBeenCalledTimes(1)
   })
 
   it('offers the demo image shortcut when provided', async () => {

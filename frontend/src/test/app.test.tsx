@@ -48,7 +48,8 @@ describe('landing page', () => {
     expect(screen.getByRole('button', { name: /upload product photo/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /from photo to price in four steps/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /upload a product photo/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /upload a product photo\. drop a file here/i })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: /upload a product photo/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /choose image/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /ready to find a better deal/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /shopping shouldn't require ten browser tabs/i })).toBeInTheDocument()
 

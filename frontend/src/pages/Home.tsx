@@ -15,8 +15,8 @@ import { ProductIdentification } from '../components/ProductIdentification'
 import { LoadingState } from '../components/LoadingState'
 import { ErrorState } from '../components/ErrorState'
 import { DemoBadge } from '../components/DemoBadge'
-import { useProductFlow } from '../context/ProductFlowContext'
-import { useAppConfig } from '../context/AppConfigContext'
+import { useProductFlow } from '../context/productFlow'
+import { useAppConfig } from '../context/appConfig'
 import { useSearchHistory } from '../hooks/useSearchHistory'
 import {
   ACCEPTED_EXTENSIONS,

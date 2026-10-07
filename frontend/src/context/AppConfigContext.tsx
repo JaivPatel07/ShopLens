@@ -1,37 +1,9 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { api } from '../services/api'
 import type { AppConfig } from '../types/product'
+import { AppConfigContext, FALLBACK_CONFIG } from './appConfig'
 
-const FALLBACK_CONFIG: AppConfig = {
-  app_name: 'SnapBuy API',
-  version: '1.0.0',
-  demo_mode: 'auto',
-  demo_vision: false,
-  demo_search: false,
-  serpapi_configured: false,
-  vision_provider: 'unknown',
-  vision_configured: false,
-  currency: 'INR',
-  market: 'India',
-  supported_image_types: ['JPG', 'JPEG', 'PNG', 'WEBP'],
-  max_upload_mb: 10,
-}
-
-interface AppConfigValue {
-  config: AppConfig
-  /** True once /api/config answered (or failed) at least once. */
-  ready: boolean
-  /** True when the backend could not be reached at all. */
-  offline: boolean
-}
-
-const AppConfigContext = createContext<AppConfigValue>({
-  config: FALLBACK_CONFIG,
-  ready: false,
-  offline: false,
-})
-
-/** Loads the backend's public configuration so the UI can label demo data. */
+/** Loads the backend's public configuration so the UI can label demo data correctly. */
 export function AppConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfig] = useState<AppConfig>(FALLBACK_CONFIG)
   const [ready, setReady] = useState(false)
@@ -63,8 +35,4 @@ export function AppConfigProvider({ children }: { children: ReactNode }) {
       {children}
     </AppConfigContext.Provider>
   )
-}
-
-export function useAppConfig(): AppConfigValue {
-  return useContext(AppConfigContext)
 }
