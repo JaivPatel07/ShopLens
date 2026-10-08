@@ -4,7 +4,6 @@ import type { HistoryEntry } from '../types/product'
 const STORAGE_KEY = 'snapbuy.history.v1'
 const MAX_ENTRIES = 12
 
-/** Read the search history defensively - corrupt storage must never break the app. */
 function readHistory(): HistoryEntry[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
@@ -23,12 +22,6 @@ function readHistory(): HistoryEntry[] {
   }
 }
 
-/**
- * Recent searches, persisted in localStorage.
- *
- * Only a small thumbnail plus the search metadata is stored - never the full
- * uploaded image - so we stay far away from the storage quota.
- */
 export function useSearchHistory() {
   const [history, setHistory] = useState<HistoryEntry[]>(() =>
     typeof window === 'undefined' ? [] : readHistory(),
@@ -47,14 +40,12 @@ export function useSearchHistory() {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
     } catch {
-      // Quota exceeded (or private mode): drop thumbnails and retry once.
       try {
         window.localStorage.setItem(
           STORAGE_KEY,
           JSON.stringify(entries.map((entry) => ({ ...entry, thumbnail: null }))),
         )
       } catch {
-        /* give up silently - history is a convenience, not a requirement */
       }
     }
   }, [])
@@ -78,7 +69,6 @@ export function useSearchHistory() {
               JSON.stringify(next.map((item) => ({ ...item, thumbnail: null }))),
             )
           } catch {
-            /* ignore */
           }
         }
         return next

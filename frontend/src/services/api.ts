@@ -1,15 +1,10 @@
-/**
- * Thin client for the SnapBuy FastAPI backend.
- *
- * All calls go through relative `/api` paths, so the browser never sees the
- * SerpApi key (or any other secret) - keys only ever live in the backend `.env`.
- */
 
 import type {
   ApiErrorPayload,
   AppConfig,
   SearchResponse,
   VisionAttributes,
+  VisualSimilarResponse,
 } from '../types/product'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
@@ -74,20 +69,29 @@ async function request<T>(path: string, init: RequestInit = {}, timeoutMs = DEFA
 }
 
 export const api = {
-  /** GET /api/health */
   health: () => request<{ status: string; version: string }>('/health', {}, 10_000),
 
-  /** GET /api/config - non-secret runtime configuration. */
   config: () => request<AppConfig>('/config', {}, 10_000),
 
-  /** POST /api/analyze-image - multipart upload of the product photo. */
   analyzeImage: (file: File) => {
     const form = new FormData()
     form.append('file', file, file.name)
     return request<VisionAttributes>('/analyze-image', { method: 'POST', body: form }, 90_000)
   },
 
-  /** POST /api/search - SerpApi backed shopping search. */
+  visualSimilar: (file: File) => {
+    const form = new FormData()
+    form.append('file', file, file.name)
+    return request<VisualSimilarResponse>('/visual-similar', { method: 'POST', body: form }, 90_000)
+  },
+
+  visualSimilarUrl: (url: string) =>
+    request<VisualSimilarResponse>(
+      `/visual-similar?url=${encodeURIComponent(url)}`,
+      {},
+      90_000,
+    ),
+
   search: (payload: { query: string; limit?: number; force_refresh?: boolean }) =>
     request<SearchResponse>(
       '/search',

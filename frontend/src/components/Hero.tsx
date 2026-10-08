@@ -7,23 +7,24 @@ const PIPELINE = [
   { icon: TrendingDown, label: 'Find best deal', detail: 'Lowest price & best value' },
 ]
 
-/** Landing hero: the pitch plus a compact mockup of the four-step flow. */
 export function Hero() {
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   return (
     <section className="relative overflow-hidden pt-14 pb-16 sm:pt-20 sm:pb-24" aria-labelledby="hero-heading">
-      {/* soft background accents */}
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-        <div className="bg-brand-200/40 absolute -top-32 -left-24 h-96 w-96 rounded-full blur-3xl" />
-        <div className="bg-accent-400/25 absolute -top-16 right-0 h-80 w-80 rounded-full blur-3xl" />
+        <div className="bg-brand-200/40 absolute -top-32 -left-24 h-96 w-96 animate-[var(--animate-drift)] rounded-full blur-3xl" />
+        <div
+          className="bg-accent-400/25 absolute -top-16 right-0 h-80 w-80 animate-[var(--animate-drift)] rounded-full blur-3xl"
+          style={{ animationDelay: '-8s' }}
+        />
         <div className="to-ink-50/70 absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent" />
       </div>
 
       <div className="container-page grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="animate-[var(--animate-fade-up)]">
-          <p className="border-ink-200 text-ink-600 inline-flex items-center gap-2 rounded-full border bg-white/80 px-3.5 py-1.5 text-xs font-medium shadow-[var(--shadow-soft)]">
+          <p className="border-ink-200 text-ink-600 inline-flex items-center gap-2 rounded-full border bg-white/80 px-3.5 py-1.5 text-xs font-medium shadow-[var(--shadow-soft)] transition-transform duration-300 hover:scale-[1.03]">
             <span className="bg-deal-500 h-1.5 w-1.5 animate-pulse rounded-full" aria-hidden="true" />
             AI recognition + live shopping search via SerpApi
           </p>
@@ -50,27 +51,26 @@ export function Hero() {
               className="btn-secondary btn-lg"
             >
               See How It Works
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
             </button>
           </div>
 
           <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6">
-            <div>
+            <div className="transition-transform duration-300 hover:-translate-y-1">
               <dt className="text-ink-400 text-xs font-medium">Search engine</dt>
               <dd className="text-ink-900 mt-1 text-sm font-semibold">SerpApi Google Shopping</dd>
             </div>
-            <div>
+            <div className="transition-transform duration-300 hover:-translate-y-1">
               <dt className="text-ink-400 text-xs font-medium">Recognition</dt>
               <dd className="text-ink-900 mt-1 text-sm font-semibold">AI vision model</dd>
             </div>
-            <div>
+            <div className="transition-transform duration-300 hover:-translate-y-1">
               <dt className="text-ink-400 text-xs font-medium">Market</dt>
               <dd className="text-ink-900 mt-1 text-sm font-semibold">India (₹ INR)</dd>
             </div>
           </dl>
         </div>
 
-        {/* Mockup */}
         <div className="relative mx-auto w-full max-w-md lg:max-w-none">
           <div className="card animate-[var(--animate-float)] relative z-10 p-5 sm:p-6">
             <div className="flex items-center justify-between">
@@ -80,16 +80,16 @@ export function Hero() {
 
             <ol className="mt-5 space-y-3">
               {PIPELINE.map((step, index) => (
-                <li key={step.label} className="relative">
-                  <div className="border-ink-100 from-ink-50/60 flex items-center gap-3 rounded-2xl border bg-gradient-to-r to-white p-3.5">
-                    <span className="from-brand-600 to-accent-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white">
+                <li key={step.label} className="group/step relative">
+                  <div className="border-ink-100 from-ink-50/60 flex items-center gap-3 rounded-2xl border bg-gradient-to-r to-white p-3.5 transition-all duration-300 group-hover/step:-translate-y-0.5 group-hover/step:border-brand-200 group-hover/step:shadow-[var(--shadow-soft)]">
+                    <span className="from-brand-600 to-accent-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white transition-transform duration-300 group-hover/step:scale-110 group-hover/step:rotate-[-6deg]">
                       <step.icon className="h-4.5 w-4.5" aria-hidden="true" />
                     </span>
                     <div className="min-w-0">
                       <p className="text-ink-900 text-sm font-semibold">{step.label}</p>
                       <p className="text-ink-500 truncate text-xs">{step.detail}</p>
                     </div>
-                    <span className="text-ink-300 ml-auto text-xs font-semibold">
+                    <span className="text-ink-300 ml-auto text-xs font-semibold transition-colors duration-300 group-hover/step:text-brand-500">
                       0{index + 1}
                     </span>
                   </div>
@@ -106,11 +106,11 @@ export function Hero() {
             <div className="border-ink-100 mt-5 flex items-center justify-between border-t pt-4">
               <div>
                 <p className="text-ink-400 text-xs">Lowest price found</p>
-                <p className="text-ink-900 text-xl font-bold">₹8,499</p>
+                <p className="text-ink-900 font-mono text-xl font-bold">₹8,499</p>
               </div>
               <div className="text-right">
                 <p className="text-ink-400 text-xs">You save</p>
-                <p className="text-deal-600 text-xl font-bold">₹1,500</p>
+                <p className="text-deal-600 font-mono text-xl font-bold">₹1,500</p>
               </div>
             </div>
 
@@ -121,7 +121,7 @@ export function Hero() {
           </div>
 
           <div
-            className="from-brand-500 to-accent-500 absolute -inset-4 -z-0 rounded-4xl bg-gradient-to-br opacity-10 blur-2xl"
+            className="from-brand-500 to-accent-500 absolute -inset-4 -z-0 rounded-4xl bg-gradient-to-br opacity-10 blur-2xl transition-opacity duration-500"
             aria-hidden="true"
           />
         </div>

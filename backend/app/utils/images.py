@@ -103,3 +103,33 @@ def prepare_image(data: bytes, content_type: str | None = None) -> PreparedImage
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         logger.warning("Could not decode uploaded image with Pillow: %s", exc)
         raise InvalidImageError() from exc
+
+
+MAX_LENS_UPLOAD_BYTES = 500 * 1024
+
+
+def shrink_for_upload(prepared: PreparedImage, max_bytes: int = MAX_LENS_UPLOAD_BYTES) -> bytes:
+    """SerpApi's Image API rejects uploads above 500 KB - squeeze under that limit."""
+    if len(prepared.data) <= max_bytes:
+        return prepared.data
+    try:
+        with Image.open(io.BytesIO(prepared.data)) as image:
+            image = image.convert("RGB")
+            for quality, scale in ((75, 1.0), (60, 1.0), (45, 0.85), (35, 0.7), (25, 0.55)):
+                candidate = (
+                    image
+                    if scale == 1.0
+                    else image.resize(
+                        (max(1, int(image.width * scale)), max(1, int(image.height * scale))),
+                        Image.Resampling.LANCZOS,
+                    )
+                )
+                buffer = io.BytesIO()
+                candidate.save(buffer, format="JPEG", quality=quality, optimize=True)
+                if buffer.tell() <= max_bytes:
+                    return buffer.getvalue()
+                last = buffer.getvalue()
+            return last
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        logger.warning("Could not shrink image for upload: %s", exc)
+        return prepared.data[:max_bytes]

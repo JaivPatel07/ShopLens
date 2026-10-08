@@ -9,8 +9,8 @@ export function FinalCTA() {
       <div className="container-page">
         <div className="from-ink-900 to-ink-800 relative overflow-hidden rounded-4xl bg-gradient-to-br px-6 py-14 text-center sm:px-12 sm:py-20">
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-            <div className="bg-brand-500/30 absolute -top-24 left-1/4 h-72 w-72 rounded-full blur-3xl" />
-            <div className="bg-accent-500/25 absolute -bottom-24 right-1/4 h-72 w-72 rounded-full blur-3xl" />
+            <div className="bg-brand-500/30 absolute -top-24 left-1/4 h-72 w-72 animate-[var(--animate-drift)] rounded-full blur-3xl" />
+            <div className="bg-accent-500/25 absolute -bottom-24 right-1/4 h-72 w-72 animate-[var(--animate-drift)] rounded-full blur-3xl" style={{ animationDelay: '-8s' }} />
           </div>
 
           <div className="relative">

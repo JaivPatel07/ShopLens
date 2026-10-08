@@ -9,7 +9,6 @@ import Home from './pages/Home'
 const Results = lazy(() => import('./pages/Results'))
 const About = lazy(() => import('./pages/About'))
 
-/** Scroll to top on route change, and to a hash target when one is present. */
 function ScrollManager() {
   const { pathname, hash } = useLocation()
 

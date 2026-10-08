@@ -22,8 +22,6 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // The menu is tied to the location it was opened at, so navigating (or using
-  // the toggle) closes it without needing an effect.
   const [menu, setMenu] = useState({ open: false, at: location.key })
   const open = menu.open && menu.at === location.key
   const setOpen = (value: boolean) => setMenu({ open: value, at: location.key })
@@ -39,28 +37,30 @@ export function Navbar() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cx(
-      'rounded-lg px-3 py-2 text-sm font-medium transition',
+      'link-underline rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200',
       isActive && location.hash === ''
-        ? 'text-ink-900 bg-ink-100'
-        : 'text-ink-600 hover:text-ink-900 hover:bg-ink-50',
+        ? 'text-ink-900'
+        : 'text-ink-600 hover:text-ink-900',
     )
 
   return (
     <header
       className={cx(
-        'sticky top-0 z-50 w-full border-b transition',
+        'sticky top-0 z-50 w-full border-b transition-all duration-300',
         scrolled
-          ? 'border-ink-100 bg-white/85 backdrop-blur-md'
+          ? 'border-ink-100 bg-white/85 shadow-[var(--shadow-soft)] backdrop-blur-md'
           : 'border-transparent bg-white/70 backdrop-blur-sm',
       )}
     >
       <nav className="container-page flex h-16 items-center justify-between gap-4" aria-label="Main">
         <Link
           to="/"
-          className="focus-visible:outline-brand-500 flex items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4"
+          className="group focus-visible:outline-brand-500 flex items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4"
           aria-label="SnapBuy home"
         >
-          <Logo />
+          <span className="transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110">
+            <Logo />
+          </span>
           <span className="text-ink-900 text-lg font-bold tracking-tight">SnapBuy</span>
         </Link>
 
@@ -70,7 +70,7 @@ export function Navbar() {
               {link.to.startsWith('/#') ? (
                 <Link
                   to={link.to}
-                  className="text-ink-600 hover:text-ink-900 hover:bg-ink-50 rounded-lg px-3 py-2 text-sm font-medium transition"
+                  className="link-underline text-ink-600 hover:text-ink-900 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200"
                 >
                   {link.label}
                 </Link>
@@ -85,7 +85,7 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           <button type="button" onClick={handleTrySnapBuy} className="btn-primary hidden sm:inline-flex">
-            <ScanSearch aria-hidden="true" className="h-4 w-4" />
+            <ScanSearch aria-hidden="true" className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
             Try SnapBuy
           </button>
           <button
@@ -109,7 +109,7 @@ export function Navbar() {
                 <Link
                   to={link.to}
                   onClick={() => setOpen(false)}
-                  className="text-ink-700 hover:bg-ink-50 block rounded-xl px-3 py-3 text-sm font-medium"
+                  className="text-ink-700 hover:bg-ink-50 hover:text-brand-700 block rounded-xl px-3 py-3 text-sm font-medium transition-colors duration-200"
                 >
                   {link.label}
                 </Link>

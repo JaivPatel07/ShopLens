@@ -10,7 +10,6 @@ interface ImagePreviewProps {
   onReplace?: () => void
   disabled?: boolean
   className?: string
-  /** Compact variant used in the results header. */
   compact?: boolean
 }
 

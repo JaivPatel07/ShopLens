@@ -5,6 +5,7 @@ import { useProductFlow } from '../context/productFlow'
 import { FilterBar } from '../components/FilterBar'
 import { ProductGrid } from '../components/ProductGrid'
 import { PriceComparison } from '../components/PriceComparison'
+import { VisualMatches } from '../components/VisualMatches'
 import { BestDealCard } from '../components/BestDealCard'
 import { SearchSummary } from '../components/SearchSummary'
 import { RefineSearch } from '../components/RefineSearch'
@@ -31,11 +32,8 @@ export default function Results() {
   const { addEntry } = useSearchHistory()
 
   const search = flow.search
-  // Stable reference so the memos below only re-run when the result set changes.
   const products = useMemo(() => search?.products ?? [], [search])
 
-  // Filters are remembered per query: a fresh result set simply falls back to
-  // the defaults, without needing an effect to reset state.
   const [filterState, setFilterState] = useState<{ forQuery: string; filters: FilterState }>({
     forQuery: '',
     filters: DEFAULT_FILTERS,
@@ -78,7 +76,6 @@ export default function Results() {
     })
   }
 
-  // -------------------------------------------------------------- empty state
   if (!search && !flow.isSearching) {
     return (
       <div className="container-page py-20">
@@ -101,7 +98,6 @@ export default function Results() {
 
   return (
     <div className="pb-24">
-      {/* ------------------------------------------------------ search header */}
       <header className="border-ink-100 bg-ink-50/40 border-b py-10">
         <div className="container-page">
           <Link
@@ -118,7 +114,6 @@ export default function Results() {
                 src={flow.imagePreview}
                 fileName={flow.imageFile?.name}
                 onRemove={() => {
-                  // "Start over": drop the image and the results, then go home.
                   flow.reset()
                   navigate('/#upload')
                 }}
@@ -191,7 +186,6 @@ export default function Results() {
       </header>
 
       <div className="container-page space-y-10 pt-10">
-        {/* -------------------------------------------------------- error state */}
         {flow.searchStatus === 'error' && (
           <ErrorState
             title="Something went wrong while searching"
@@ -205,7 +199,6 @@ export default function Results() {
           />
         )}
 
-        {/* ------------------------------------------------------- loading state */}
         {flow.isSearching && (
           <>
             <LoadingState
@@ -222,7 +215,6 @@ export default function Results() {
           </>
         )}
 
-        {/* ------------------------------------------------------- result states */}
         {!flow.isSearching && search && (
           <>
             {search.notes.length > 0 && (
@@ -333,6 +325,8 @@ export default function Results() {
                 }
               />
             )}
+
+            <VisualMatches imageFile={flow.imageFile} />
 
             <RefineSearch
               key={search.query}

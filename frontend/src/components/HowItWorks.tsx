@@ -46,14 +46,18 @@ export function HowItWorks() {
           {STEPS.map((step, index) => (
             <li
               key={step.number}
-              className="card card-hover animate-[var(--animate-fade-up)] relative p-6"
+              className="card card-hover group animate-[var(--animate-fade-up)] relative p-6"
               style={{ animationDelay: `${index * 70}ms` }}
             >
-              <span className="text-ink-200 text-3xl font-bold tabular-nums">{step.number}</span>
-              <span className="from-brand-600 to-accent-600 mt-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white">
+              <span className="text-ink-200 text-3xl font-bold tabular-nums transition-colors duration-300 group-hover:text-brand-300">
+                {step.number}
+              </span>
+              <span className="from-brand-600 to-accent-600 mt-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br text-white transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-6deg]">
                 <step.icon className="h-5 w-5" aria-hidden="true" />
               </span>
-              <h3 className="mt-4 text-base font-semibold">{step.title}</h3>
+              <h3 className="mt-4 text-base font-semibold transition-colors duration-300 group-hover:text-brand-700">
+                {step.title}
+              </h3>
               <p className="text-ink-500 mt-2 text-sm leading-relaxed">{step.copy}</p>
             </li>
           ))}

@@ -1,10 +1,6 @@
 import { FlaskConical } from 'lucide-react'
 import { cx } from '../lib/format'
 
-/**
- * Marks any content that came from the offline demo fixtures.
- * Demo data is always labelled - it is never blended into live API results.
- */
 export function DemoBadge({ className, label = 'Demo Data' }: { className?: string; label?: string }) {
   return (
     <span

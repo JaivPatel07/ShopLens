@@ -15,7 +15,7 @@ from __future__ import annotations
 import re
 from urllib.parse import quote_plus
 
-from app.models.product import Product
+from app.models.product import Product, VisualMatch
 
 # --------------------------------------------------------------------------- #
 # Currency / number parsing
@@ -357,3 +357,73 @@ def normalize_serpapi_payload(
 def parse_payload_price(payload: dict) -> tuple[float | None, str]:
     """Convenience re-export used by tests and the demo fixtures."""
     return parse_price(_first(payload, _PRICE_KEYS), "INR")
+
+
+# --------------------------------------------------------------------------- #
+# Google Lens payload -> VisualMatch
+# --------------------------------------------------------------------------- #
+
+def _lens_price(raw: object, default_currency: str) -> tuple[float | None, str, str | None]:
+    """Lens prices arrive as ``{"value": "₹8,499", "extracted_value": 8499, ...}``."""
+    if isinstance(raw, dict):
+        extracted = raw.get("extracted_value")
+        value, currency = parse_price(extracted, default_currency)
+        if value is None:
+            value, currency = parse_price(raw.get("value"), default_currency)
+        if isinstance(raw.get("currency"), str) and raw["currency"].strip():
+            currency = detect_currency(raw["currency"], currency)
+        return value, currency, clean_text(raw.get("value"), limit=40)
+    value, currency = parse_price(raw, default_currency)
+    return value, currency, None
+
+
+def normalize_visual_matches(
+    payload: dict,
+    *,
+    default_currency: str = "INR",
+    limit: int = 12,
+    is_demo: bool = False,
+) -> list[VisualMatch]:
+    """Map a ``engine=google_lens`` payload onto :class:`VisualMatch` rows."""
+    matches: list[VisualMatch] = []
+    seen: set[str] = set()
+
+    raw_items = payload.get("visual_matches")
+    if not isinstance(raw_items, list):
+        return []
+
+    for index, raw in enumerate(raw_items):
+        if not isinstance(raw, dict):
+            continue
+        title = clean_text(raw.get("title"), limit=200)
+        if not title:
+            continue
+        link = clean_text(_first(raw, _LINK_KEYS), limit=500)
+        price, currency, price_display = _lens_price(raw.get("price"), default_currency)
+        thumbnail = clean_text(_first(raw, _THUMBNAIL_KEYS), limit=500)
+
+        key = f"{title.lower()}|{(link or '')}"
+        if key in seen:
+            continue
+        seen.add(key)
+
+        matches.append(
+            VisualMatch(
+                id=f"lens-{index + 1}-{slug(title)}",
+                title=title,
+                source=clean_text(raw.get("source"), limit=80),
+                link=link,
+                thumbnail=thumbnail,
+                price=price,
+                currency=currency,
+                price_formatted=price_display or format_price(price, currency),
+                rating=parse_float(raw.get("rating"), minimum=0, maximum=5),
+                reviews=parse_int(raw.get("reviews")),
+                in_stock=raw.get("in_stock") if isinstance(raw.get("in_stock"), bool) else None,
+                is_demo=is_demo,
+            )
+        )
+        if len(matches) >= limit:
+            break
+
+    return matches

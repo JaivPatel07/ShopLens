@@ -12,6 +12,7 @@ import { RecentSearches } from '../components/RecentSearches'
 import { UploadBox } from '../components/UploadBox'
 import { ImagePreview } from '../components/ImagePreview'
 import { ProductIdentification } from '../components/ProductIdentification'
+import { VisualMatches } from '../components/VisualMatches'
 import { LoadingState } from '../components/LoadingState'
 import { ErrorState } from '../components/ErrorState'
 import { DemoBadge } from '../components/DemoBadge'
@@ -27,7 +28,6 @@ import {
 
 const DEMO_IMAGE_URL = '/demo/sample-product.jpg'
 
-/** Interactive upload → identify → search section (the heart of the landing page). */
 function UploadSection() {
   const flow = useProductFlow()
   const { config } = useAppConfig()
@@ -35,8 +35,6 @@ function UploadSection() {
   const { history, addEntry, removeEntry, clearHistory } = useSearchHistory()
   const [demoLoading, setDemoLoading] = useState(false)
   const [demoError, setDemoError] = useState<string | null>(null)
-  // Kept mounted so "Replace" can reopen the picker even though UploadBox is
-  // unmounted once a preview is showing.
   const replaceInputRef = useRef<HTMLInputElement>(null)
 
   const handleTryDemo = async () => {
@@ -67,7 +65,6 @@ function UploadSection() {
     const response = await flow.runSearch(query)
     if (!response) return
 
-    // Store a compact history entry (thumbnail, not the full image).
     let thumbnail: string | null = null
     if (flow.imageFile) thumbnail = await createThumbnailDataUrl(flow.imageFile, 128)
     addEntry({
@@ -157,7 +154,6 @@ function UploadSection() {
               </p>
             )}
 
-            {/* Off-screen picker used by the preview's "Replace" button. */}
             <input
               ref={replaceInputRef}
               type="file"
@@ -237,6 +233,8 @@ function UploadSection() {
                 searching={flow.isSearching}
               />
             )}
+
+            {flow.analysis && <VisualMatches imageFile={flow.imageFile} />}
 
             {!flow.isAnalyzing && !flow.analysis && flow.analyzeStatus !== 'error' && (
               <div className="card bg-ink-50/50 border-dashed p-6 sm:p-7">

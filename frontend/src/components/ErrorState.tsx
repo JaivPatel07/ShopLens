@@ -5,7 +5,6 @@ import { cx } from '../lib/format'
 interface ErrorStateProps {
   title: string
   message: string
-  /** Practical suggestions, e.g. "Try a clearer photo". */
   suggestions?: string[]
   onRetry?: () => void
   retryLabel?: string
@@ -13,7 +12,6 @@ interface ErrorStateProps {
   className?: string
 }
 
-/** Friendly, non-technical error card. Technical detail stays in the backend log. */
 export function ErrorState({
   title,
   message,

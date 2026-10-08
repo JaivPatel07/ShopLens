@@ -1,4 +1,3 @@
-/** Small formatting helpers shared across components. */
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
   INR: '₹',
@@ -17,7 +16,6 @@ export function currencySymbol(currency = 'INR'): string {
   return CURRENCY_SYMBOLS[currency.toUpperCase()] ?? `${currency.toUpperCase()} `
 }
 
-/** Format a numeric price, using Indian digit grouping for INR. */
 export function formatPrice(value: number | null | undefined, currency = 'INR'): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '—'
   const symbol = currencySymbol(currency)
@@ -29,7 +27,6 @@ export function formatPrice(value: number | null | undefined, currency = 'INR'):
   })}`
 }
 
-/** 1234 -> "1.2k" (compact review counts). */
 export function formatCount(value: number | null | undefined): string {
   if (value === null || value === undefined) return ''
   if (value < 1000) return `${value}`

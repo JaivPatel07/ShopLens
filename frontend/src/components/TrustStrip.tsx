@@ -30,14 +30,16 @@ export function TrustStrip() {
         {ITEMS.map((item, index) => (
           <div
             key={item.title}
-            className="animate-[var(--animate-fade-up)] flex gap-3"
+            className="group animate-[var(--animate-fade-up)] flex gap-3 transition-transform duration-300 hover:-translate-y-1"
             style={{ animationDelay: `${index * 60}ms` }}
           >
-            <span className="bg-brand-50 text-brand-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">
+            <span className="bg-brand-50 text-brand-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:bg-brand-100">
               <item.icon className="h-4.5 w-4.5" aria-hidden="true" />
             </span>
             <div>
-              <h3 className="text-sm font-semibold">{item.title}</h3>
+              <h3 className="text-sm font-semibold transition-colors duration-300 group-hover:text-brand-700">
+                {item.title}
+              </h3>
               <p className="text-ink-500 mt-1 text-xs leading-relaxed">{item.copy}</p>
             </div>
           </div>

@@ -42,7 +42,7 @@ export function HackathonValue() {
             {PILLARS.map((pillar, index) => (
               <li
                 key={pillar.title}
-                className="animate-[var(--animate-fade-up)] rounded-2xl border border-ink-100 bg-white p-4 shadow-[var(--shadow-soft)]"
+                className="animate-[var(--animate-fade-up)] rounded-2xl border border-ink-100 bg-white p-4 shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:shadow-[var(--shadow-lift)]"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
                 <pillar.icon className="text-brand-600 h-5 w-5" aria-hidden="true" />
