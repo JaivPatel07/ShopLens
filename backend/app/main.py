@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.routes import health, image, search
+from app.routes import health, image, lens, search
 from app.utils.errors import SnapBuyError
 
 logging.basicConfig(
@@ -135,6 +135,7 @@ async def unhandled_error_handler(request: Request, exc: Exception) -> JSONRespo
 app.include_router(health.router, prefix="/api")
 app.include_router(image.router, prefix="/api")
 app.include_router(search.router, prefix="/api")
+app.include_router(lens.router, prefix="/api")
 
 
 @app.get("/", include_in_schema=False)

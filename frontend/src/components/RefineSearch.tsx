@@ -6,14 +6,10 @@ interface RefineSearchProps {
   query: string
   onRefine: (query: string) => void
   loading?: boolean
-  /** Suggestions built from the identified product attributes. */
   suggestions?: string[]
   className?: string
 }
 
-/**
- * Refine the query and run another SerpApi search without re-uploading the photo.
- */
 export function RefineSearch({
   query,
   onRefine,
@@ -21,8 +17,6 @@ export function RefineSearch({
   suggestions = [],
   className,
 }: RefineSearchProps) {
-  // Seeded from the current query; the parent remounts this component
-  // (key={query}) whenever a new search changes it.
   const [value, setValue] = useState(query)
 
   const submit = (next: string) => {

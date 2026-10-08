@@ -8,7 +8,6 @@ import { useMediaQuery } from '../hooks/useMediaQuery'
 interface FilterBarProps {
   filters: FilterState
   onChange: (filters: FilterState) => void
-  /** Sellers present in the current result set. */
   availableSellers: string[]
   priceBounds: { min: number; max: number } | null
   ratingBounds: number | null
@@ -40,8 +39,6 @@ export function FilterBar({
 }: FilterBarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 1024px)')
-  // The drawer belongs to the mobile layout only: deriving this (instead of
-  // syncing with an effect) means resizing to desktop simply hides it.
   const drawerVisible = drawerOpen && !isDesktop
 
   const activeCount = useMemo(() => {
@@ -200,10 +197,8 @@ export function FilterBar({
         </div>
       </div>
 
-      {/* Desktop / tablet: inline controls */}
       <div className="mt-5 hidden lg:block">{controls}</div>
 
-      {/* Mobile: bottom-sheet drawer */}
       {drawerVisible && (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
           <button

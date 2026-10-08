@@ -15,18 +15,19 @@ from typing import Any
 import httpx
 
 from app.config import settings
-from app.models.product import Product
+from app.models.product import Product, VisualMatch
 from app.utils.errors import (
     RateLimitError,
     SearchNotConfiguredError,
     SearchProviderError,
     SearchTimeoutError,
 )
-from app.utils.normalization import normalize_serpapi_payload
+from app.utils.normalization import normalize_serpapi_payload, normalize_visual_matches
 
 logger = logging.getLogger("snapbuy.serpapi")
 
 SERPAPI_ENDPOINT = "https://serpapi.com/search.json"
+SERPAPI_IMAGE_ENDPOINT = "https://serpapi.com/image"
 
 # HTTP statuses SerpApi uses to signal quota / plan problems.
 _RATE_LIMIT_STATUSES = {401, 429}
@@ -195,6 +196,108 @@ async def search_google_shopping(
 
     _cache.set(cache_key, products)
     return SerpApiResult(products, engine=params["engine"], notes=notes)
+
+
+class LensResult:
+    """Outcome of a Google Lens visual search."""
+
+    def __init__(
+        self,
+        matches: list[VisualMatch],
+        *,
+        engine: str = "google_lens",
+        notes: list[str] | None = None,
+        cached: bool = False,
+    ) -> None:
+        self.matches = matches
+        self.engine = engine
+        self.notes = notes or []
+        self.cached = cached
+
+
+async def upload_image_for_lens(data: bytes) -> str:
+    """Upload an image to SerpApi's Image API and get back a short-lived ``image_id``.
+
+    This is how local photos (the user's own upload) reach Google Lens without
+    being hosted anywhere - the id expires after 10 minutes on SerpApi's side.
+    """
+    if not settings.serpapi_configured:
+        raise SearchNotConfiguredError()
+
+    try:
+        async with httpx.AsyncClient(timeout=settings.serpapi_timeout_seconds) as client:
+            response = await client.post(
+                SERPAPI_IMAGE_ENDPOINT,
+                files={"image": ("photo.jpg", data, "image/jpeg")},
+                data={"api_key": settings.serpapi_api_key},
+            )
+    except httpx.TimeoutException as exc:
+        raise SearchTimeoutError() from exc
+    except httpx.HTTPError as exc:
+        raise SearchProviderError(detail=str(exc)) from exc
+
+    if response.status_code in _RATE_LIMIT_STATUSES:
+        raise RateLimitError()
+    if response.status_code >= 400:
+        raise SearchProviderError(detail=f"HTTP {response.status_code}")
+
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise SearchProviderError(detail="malformed JSON") from exc
+
+    image_id = payload.get("image_id") if isinstance(payload, dict) else None
+    if not image_id:
+        raise SearchProviderError(detail=str(payload.get("error", "no image_id")))
+    return str(image_id)
+
+
+async def search_google_lens(
+    *,
+    image_id: str | None = None,
+    image_url: str | None = None,
+    limit: int = 12,
+    force_refresh: bool = False,
+) -> LensResult:
+    """Find visually similar products with ``engine=google_lens``.
+
+    Accepts either an ``image_id`` (from :func:`upload_image_for_lens`) or a
+    public ``image_url``.  Uses the ``products`` tab so matches carry prices.
+    """
+    if not image_id and not image_url:
+        raise ValueError("image_id or image_url is required")
+
+    cache_key = f"lens::{image_id or image_url}::{limit}"
+    if not force_refresh:
+        cached = _cache.get(cache_key)
+        if cached is not None:
+            return LensResult(cached, cached=True)
+
+    notes: list[str] = []
+    params: dict[str, Any] = {
+        "engine": "google_lens",
+        "type": "products",
+        "hl": settings.serpapi_hl,
+    }
+    if image_id:
+        params["image_id"] = image_id
+    else:
+        params["url"] = image_url
+
+    payload = await _request(params)
+    matches = normalize_visual_matches(payload, default_currency="INR", limit=limit)
+
+    if not matches:
+        # The products tab can be sparse for non-retail photos - fall back to
+        # the broad visual-matches tab before giving up.
+        params["type"] = "visual_matches"
+        fallback_payload = await _request(params)
+        matches = normalize_visual_matches(fallback_payload, default_currency="INR", limit=limit)
+        if matches:
+            notes.append("Matches came from the Google Lens visual-matches tab (fallback).")
+
+    _cache.set(cache_key, matches)
+    return LensResult(matches, notes=notes)
 
 
 async def warmup() -> None:

@@ -1,8 +1,3 @@
-/**
- * Types mirroring the FastAPI models in `backend/app/models`.
- * Every field that can be missing in real SerpApi data is optional so the UI is
- * forced to handle its absence.
- */
 
 export interface Product {
   id: string
@@ -88,6 +83,29 @@ export interface SearchResponse {
   notes: string[]
   created_at: string
   elapsed_ms: number | null
+}
+
+export interface VisualMatch {
+  id: string
+  title: string
+  source: string | null
+  link: string | null
+  thumbnail: string | null
+  price: number | null
+  currency: string
+  price_formatted: string | null
+  rating: number | null
+  reviews: number | null
+  in_stock: boolean | null
+  is_demo: boolean
+}
+
+export interface VisualSimilarResponse {
+  matches: VisualMatch[]
+  engine: string
+  count: number
+  is_demo: boolean
+  notes: string[]
 }
 
 export interface VisionAttributes {

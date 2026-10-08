@@ -11,10 +11,6 @@ interface RecentSearchesProps {
   className?: string
 }
 
-/**
- * Recent searches stored in localStorage (metadata + a small thumbnail only).
- * Clicking an entry re-runs the same SerpApi search.
- */
 export function RecentSearches({
   history,
   onRerun,
@@ -49,7 +45,7 @@ export function RecentSearches({
               onClick={() => onRerun(entry)}
               aria-label={`Search again for ${entry.productName || entry.query}`}
             >
-              <span className="bg-ink-50 h-12 w-12 shrink-0 overflow-hidden rounded-xl">
+              <span className="bg-ink-50 h-12 w-12 shrink-0 overflow-hidden rounded-xl transition-transform duration-300 group-hover:scale-105">
                 {entry.thumbnail ? (
                   <img
                     src={entry.thumbnail}

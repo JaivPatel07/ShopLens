@@ -1,10 +1,3 @@
-/**
- * Client-side image helpers.
- *
- * The original file is sent to the backend (which downscales it before calling
- * the vision provider). Locally we only create a lightweight object URL for the
- * preview, plus a tiny JPEG thumbnail for localStorage search history.
- */
 
 export const ACCEPTED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 export const ACCEPTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
@@ -36,10 +29,6 @@ export function revokePreviewUrl(url: string | null): void {
   if (url && url.startsWith('blob:')) URL.revokeObjectURL(url)
 }
 
-/**
- * Downscale an image to `maxSize` px on its longest edge and return a data URL.
- * Used for the small search-history thumbnails so localStorage stays small.
- */
 export async function createThumbnailDataUrl(file: File, maxSize = 128): Promise<string | null> {
   try {
     const bitmap = await loadImage(file)

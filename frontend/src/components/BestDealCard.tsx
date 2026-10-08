@@ -14,10 +14,6 @@ const CONFIDENCE_COPY: Record<Recommendation['confidence'], string> = {
   low: 'Low confidence — only a few usable data points',
 }
 
-/**
- * The headline recommendation. The reasoning is always shown next to the pick,
- * and when the data is too thin we say so instead of inventing a winner.
- */
 export function BestDealCard({ recommendation, currency = 'INR', className }: BestDealCardProps) {
   const product = recommendation?.product ?? null
 
@@ -43,7 +39,7 @@ export function BestDealCard({ recommendation, currency = 'INR', className }: Be
   return (
     <section
       className={cx(
-        'animate-[var(--animate-fade-up)] overflow-hidden rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-white to-white shadow-[var(--shadow-soft)]',
+        'animate-[var(--animate-fade-up)] overflow-hidden rounded-2xl border border-amber-200/70 bg-gradient-to-br from-amber-50 via-white to-white shadow-[var(--shadow-soft)] transition-shadow duration-300 hover:shadow-[var(--shadow-lift)]',
         className,
       )}
       aria-labelledby="best-deal-heading"
@@ -88,7 +84,7 @@ export function BestDealCard({ recommendation, currency = 'INR', className }: Be
           <h3 className="text-lg font-bold sm:text-xl">{product.title}</h3>
 
           <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-2xl font-bold sm:text-3xl">{price}</span>
+            <span className="font-mono text-2xl font-bold sm:text-3xl">{price}</span>
             {original && product.original_price !== null && (
               <span className="text-ink-400 text-sm line-through">{original}</span>
             )}

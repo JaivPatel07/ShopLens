@@ -8,10 +8,6 @@ interface SearchSummaryProps {
   className?: string
 }
 
-/**
- * Lowest / average / highest cards. Values are computed on the backend from
- * valid numeric prices only - an empty summary shows "—" instead of a guess.
- */
 export function SearchSummary({ summary, loading = false, className }: SearchSummaryProps) {
   const cards = [
     {
@@ -60,7 +56,7 @@ export function SearchSummary({ summary, loading = false, className }: SearchSum
         {cards.map((card, index) => (
           <div
             key={card.key}
-            className="card animate-[var(--animate-fade-up)] p-5"
+            className="card card-hover animate-[var(--animate-fade-up)] p-5"
             style={{ animationDelay: `${index * 60}ms` }}
           >
             <div className="flex items-center justify-between">
@@ -70,7 +66,7 @@ export function SearchSummary({ summary, loading = false, className }: SearchSum
               </span>
             </div>
             <p
-              className={cx('mt-3 text-2xl font-bold sm:text-3xl', loading && 'text-ink-300')}
+              className={cx('mt-3 font-mono text-2xl font-bold sm:text-3xl', loading && 'text-ink-300')}
               aria-live="polite"
             >
               {loading ? '—' : card.value ?? '—'}

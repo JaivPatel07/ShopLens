@@ -9,15 +9,10 @@ interface UploadBoxProps {
   disabled?: boolean
   maxSizeMb?: number
   supportedTypes?: string[]
-  /** Validation message coming from the parent (e.g. backend rejection). */
   error?: string | null
   className?: string
 }
 
-/**
- * Drag & drop / click / keyboard upload area.
- * The dropzone is a real focusable control, so Enter and Space open the picker.
- */
 export function UploadBox({
   onSelect,
   onTryDemo,
@@ -52,7 +47,6 @@ export function UploadBox({
     [onSelect],
   )
 
-  // Allow pasting an image straight from the clipboard.
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
       if (disabled) return
@@ -71,9 +65,6 @@ export function UploadBox({
 
   return (
     <div className={className}>
-      {/* The whole panel is clickable for mouse users, but the real controls are
-          the buttons inside it - that keeps the ARIA tree valid (no nested
-          `button` roles) while staying fully keyboard operable. */}
       <div
         role="group"
         aria-describedby={descriptionId}

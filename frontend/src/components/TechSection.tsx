@@ -25,10 +25,6 @@ const OWNER_LABEL: Record<string, string> = {
   you: 'Input',
 }
 
-/**
- * Makes SerpApi's role explicit and, just as importantly, distinguishes it from
- * the AI recognition step - SerpApi does not do image recognition.
- */
 export function TechSection() {
   return (
     <section id="technology" className="scroll-mt-20 py-20 sm:py-24" aria-labelledby="tech-heading">
@@ -50,7 +46,7 @@ export function TechSection() {
             {PIPELINE.map((step, index) => (
               <li key={step.label}>
                 <div
-                  className={`animate-[var(--animate-fade-up)] flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm font-medium ${OWNER_STYLE[step.owner]}`}
+                  className={`${OWNER_STYLE[step.owner]} animate-[var(--animate-fade-up)] flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-300 hover:translate-x-1.5 hover:shadow-[var(--shadow-soft)]`}
                   style={{ animationDelay: `${index * 40}ms` }}
                 >
                   <span>{step.label}</span>
@@ -68,7 +64,7 @@ export function TechSection() {
           </ol>
 
           <div className="space-y-4">
-            <article className="card p-6">
+            <article className="card card-hover group p-6">
               <span className="bg-brand-50 text-brand-600 flex h-10 w-10 items-center justify-center rounded-xl">
                 <Bot className="h-5 w-5" aria-hidden="true" />
               </span>
@@ -80,7 +76,7 @@ export function TechSection() {
               </p>
             </article>
 
-            <article className="card border-deal-100 bg-deal-50/40 p-6">
+            <article className="card card-hover group border-deal-100 bg-deal-50/40 p-6">
               <span className="bg-deal-100 text-deal-700 flex h-10 w-10 items-center justify-center rounded-xl">
                 <ScanSearch className="h-5 w-5" aria-hidden="true" />
               </span>
@@ -94,7 +90,7 @@ export function TechSection() {
               </p>
             </article>
 
-            <article className="card p-6">
+            <article className="card card-hover group p-6">
               <span className="bg-ink-100 text-ink-700 flex h-10 w-10 items-center justify-center rounded-xl">
                 <Server className="h-5 w-5" aria-hidden="true" />
               </span>

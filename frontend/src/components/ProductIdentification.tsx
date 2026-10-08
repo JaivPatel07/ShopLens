@@ -13,10 +13,6 @@ interface ProductIdentificationProps {
   className?: string
 }
 
-/**
- * Shows what the AI recognised and lets the user fix the generated query
- * before it goes to SerpApi - recognition is never assumed to be perfect.
- */
 export function ProductIdentification({
   analysis,
   query,
@@ -26,8 +22,6 @@ export function ProductIdentification({
   className,
 }: ProductIdentificationProps) {
   const [editing, setEditing] = useState(false)
-  // The draft only exists while editing, so it is seeded when editing starts
-  // rather than kept in sync with an effect.
   const [draft, setDraft] = useState(query)
 
   const confidencePercent =

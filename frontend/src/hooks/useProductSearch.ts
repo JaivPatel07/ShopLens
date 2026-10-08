@@ -3,13 +3,6 @@ import { ApiError, api } from '../services/api'
 import type { FlowStatus, SearchResponse, VisionAttributes } from '../types/product'
 import { createPreviewUrl, revokePreviewUrl } from '../lib/image'
 
-/**
- * The SnapBuy flow state machine:
- *   select image -> identify product -> run SerpApi search -> compare results
- *
- * Progress stages are driven by *real* request boundaries (upload, vision call,
- * SerpApi call), never by synthetic timers.
- */
 export interface ProductSearchState {
   imageFile: File | null
   imagePreview: string | null
@@ -120,7 +113,6 @@ export function useProductSearch() {
     dispatch({ type: 'image/cleared' })
   }, [])
 
-  /** Identify the product in the currently selected image. */
   const analyzeImage = useCallback(
     async (file?: File) => {
       const target = file ?? state.imageFile
@@ -143,7 +135,6 @@ export function useProductSearch() {
     [state.imageFile],
   )
 
-  /** Run a SerpApi backed shopping search (used by both search & refine). */
   const runSearch = useCallback(
     async (query: string, options: { forceRefresh?: boolean } = {}) => {
       const cleaned = query.trim()
@@ -178,10 +169,6 @@ export function useProductSearch() {
     dispatch({ type: 'flow/reset' })
   }, [])
 
-  /**
-   * Which of the four progress stages are done.
-   * `identify` and `compare` map to real network boundaries.
-   */
   const stages = useMemo(
     () => ({
       uploaded: Boolean(state.imageFile),

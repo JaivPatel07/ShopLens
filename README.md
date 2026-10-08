@@ -91,10 +91,9 @@ cp frontend/.env.example frontend/.env    # optional, defaults are fine
 
 ```env
 SERPAPI_API_KEY=your_serpapi_key_here     # https://serpapi.com/manage-api-key
-VISION_PROVIDER=                          # openai | gemini | demo | empty = auto-detect
+VISION_PROVIDER=                          # openai | gemini | empty = auto-detect
 VISION_API_KEY=your_vision_api_key_here
 DEMO_MODE=auto                            # auto | on | off
-FRONTEND_URL=http://localhost:5173
 ```
 
 * `DEMO_MODE=auto` (default): real APIs when keys exist, clearly-labelled demo data otherwise.

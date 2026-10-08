@@ -38,6 +38,31 @@ class Product(BaseModel):
     is_demo: bool = False
 
 
+class VisualMatch(BaseModel):
+    """A Google Lens visual match - a product found by pixels, not keywords."""
+
+    id: str
+    title: str
+    source: str | None = None
+    link: str | None = None
+    thumbnail: str | None = None
+    price: float | None = None
+    currency: str = "INR"
+    price_formatted: str | None = None
+    rating: float | None = None
+    reviews: int | None = None
+    in_stock: bool | None = None
+    is_demo: bool = False
+
+
+class VisualSimilarResponse(BaseModel):
+    matches: list[VisualMatch] = Field(default_factory=list)
+    engine: str = "google_lens"
+    count: int = 0
+    is_demo: bool = False
+    notes: list[str] = Field(default_factory=list)
+
+
 class PriceSummary(BaseModel):
     count: int = 0
     priced_count: int = 0

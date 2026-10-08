@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
-import { CodeXml, Sparkles } from 'lucide-react'
+import { ArrowUpRight, CodeXml, Sparkles } from 'lucide-react'
 import { Logo } from './Logo'
 
-// Evaluated once per app load instead of during render (keeps render pure).
 const CURRENT_YEAR = new Date().getFullYear()
+
+const FOOTER_LINK =
+  'group text-ink-500 hover:text-ink-900 inline-flex items-center gap-1.5 transition-colors duration-200'
 
 export function Footer() {
   return (
@@ -28,18 +30,21 @@ export function Footer() {
           <h3 className="text-ink-900 text-sm font-semibold">Product</h3>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
-              <Link to="/#upload" className="text-ink-500 hover:text-ink-900 transition">
-                Upload a photo
+              <Link to="/#upload" className={FOOTER_LINK}>
+                <span className="link-underline">Upload a photo</span>
+                <ArrowUpRight className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" aria-hidden="true" />
               </Link>
             </li>
             <li>
-              <Link to="/#how-it-works" className="text-ink-500 hover:text-ink-900 transition">
-                How it works
+              <Link to="/#how-it-works" className={FOOTER_LINK}>
+                <span className="link-underline">How it works</span>
+                <ArrowUpRight className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" aria-hidden="true" />
               </Link>
             </li>
             <li>
-              <Link to="/results" className="text-ink-500 hover:text-ink-900 transition">
-                Results dashboard
+              <Link to="/results" className={FOOTER_LINK}>
+                <span className="link-underline">Results dashboard</span>
+                <ArrowUpRight className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" aria-hidden="true" />
               </Link>
             </li>
           </ul>
@@ -49,8 +54,9 @@ export function Footer() {
           <h3 className="text-ink-900 text-sm font-semibold">Project</h3>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
-              <Link to="/about" className="text-ink-500 hover:text-ink-900 transition">
-                About SnapBuy
+              <Link to="/about" className={FOOTER_LINK}>
+                <span className="link-underline">About SnapBuy</span>
+                <ArrowUpRight className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" aria-hidden="true" />
               </Link>
             </li>
             <li>
@@ -58,9 +64,10 @@ export function Footer() {
                 href="https://serpapi.com/"
                 target="_blank"
                 rel="noreferrer noopener"
-                className="text-ink-500 hover:text-ink-900 transition"
+                className={FOOTER_LINK}
               >
-                SerpApi
+                <span className="link-underline">SerpApi</span>
+                <ArrowUpRight className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" aria-hidden="true" />
               </a>
             </li>
             <li>
@@ -68,10 +75,10 @@ export function Footer() {
                 href="https://github.com/JaivPatel07/SerpApi-India-Hackathon-"
                 target="_blank"
                 rel="noreferrer noopener"
-                className="text-ink-500 hover:text-ink-900 inline-flex items-center gap-1.5 transition"
+                className={FOOTER_LINK}
               >
-                <CodeXml className="h-3.5 w-3.5" aria-hidden="true" />
-                Source
+                <CodeXml className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-12" aria-hidden="true" />
+                <span className="link-underline">Source</span>
               </a>
             </li>
           </ul>

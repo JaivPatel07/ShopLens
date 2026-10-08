@@ -6,7 +6,6 @@ import { DemoBadge } from './DemoBadge'
 
 interface ProductCardProps {
   product: Product
-  /** Highlights the card picked by the recommendation engine. */
   highlight?: boolean
   badge?: string
   index?: number
@@ -23,7 +22,7 @@ export function ProductCard({ product, highlight = false, badge, index = 0 }: Pr
   return (
     <article
       className={cx(
-        'card card-hover animate-[var(--animate-fade-up)] flex h-full flex-col overflow-hidden',
+        'card card-hover group animate-[var(--animate-fade-up)] flex h-full flex-col overflow-hidden',
         highlight && 'ring-brand-200 ring-2',
       )}
       style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
@@ -37,7 +36,7 @@ export function ProductCard({ product, highlight = false, badge, index = 0 }: Pr
             decoding="async"
             referrerPolicy="no-referrer"
             onError={() => setImageFailed(true)}
-            className="h-full w-full object-contain p-3 transition duration-500 hover:scale-[1.03]"
+            className="h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-[1.06]"
           />
         ) : (
           <div
@@ -60,7 +59,7 @@ export function ProductCard({ product, highlight = false, badge, index = 0 }: Pr
         </div>
 
         {discount !== null && discount > 0 && (
-          <span className="bg-deal-600 absolute top-3 right-3 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white">
+          <span className="bg-deal-600 absolute top-3 right-3 inline-flex animate-[var(--animate-bounce-in)] items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold text-white">
             <TrendingDown className="h-3 w-3" aria-hidden="true" />
             {Math.round(discount)}% OFF
           </span>
@@ -68,12 +67,12 @@ export function ProductCard({ product, highlight = false, badge, index = 0 }: Pr
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-ink-900 line-clamp-2 text-sm leading-snug font-semibold" title={product.title}>
+        <h3 className="text-ink-900 line-clamp-2 text-sm leading-snug font-semibold transition-colors duration-300 group-hover:text-brand-700" title={product.title}>
           {product.title}
         </h3>
 
         <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-ink-900 text-xl font-bold">{price}</span>
+          <span className="text-ink-900 font-mono text-xl font-bold transition-colors duration-300 group-hover:text-brand-700">{price}</span>
           {original && product.original_price !== null && (
             <span className="text-ink-400 text-sm line-through">{original}</span>
           )}

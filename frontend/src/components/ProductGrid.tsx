@@ -8,7 +8,6 @@ interface ProductGridProps {
   products: Product[]
   loading?: boolean
   skeletonCount?: number
-  /** Product id picked by the recommendation engine. */
   bestDealId?: string | null
   emptyAction?: ReactNode
   className?: string

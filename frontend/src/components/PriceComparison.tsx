@@ -8,10 +8,6 @@ interface PriceComparisonProps {
   className?: string
 }
 
-/**
- * Per-merchant price bars, drawn from the real returned results only.
- * Bar length is proportional to price within the observed range.
- */
 export function PriceComparison({ sellers, currency = 'INR', className }: PriceComparisonProps) {
   if (sellers.length === 0) return null
 
@@ -40,12 +36,11 @@ export function PriceComparison({ sellers, currency = 'INR', className }: PriceC
 
       <ul className="mt-6 space-y-3.5">
         {sellers.map((seller) => {
-          // Cheapest seller gets a full bar; longer bars mean higher prices.
           const ratio = span === 0 ? 1 : (seller.price - lowest) / span
           const width = 45 + ratio * 55
 
           return (
-            <li key={seller.source} className="grid grid-cols-[minmax(0,7rem)_1fr] items-center gap-3 sm:grid-cols-[minmax(0,12rem)_1fr_auto]">
+            <li key={seller.source} className="group grid grid-cols-[minmax(0,7rem)_1fr] items-center gap-3 rounded-lg px-2 transition-colors duration-200 hover:bg-ink-50/70 sm:grid-cols-[minmax(0,12rem)_1fr_auto]">
               <span className="text-ink-800 flex min-w-0 items-center gap-1.5 text-sm font-medium">
                 {seller.is_lowest && (
                   <Trophy className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-label="Lowest price" />
@@ -68,7 +63,7 @@ export function PriceComparison({ sellers, currency = 'INR', className }: PriceC
               </span>
 
               <span className="col-span-2 flex items-center justify-between gap-3 sm:col-span-1 sm:justify-end">
-                <span className="text-ink-900 text-sm font-semibold">
+                <span className="text-ink-900 font-mono text-sm font-semibold">
                   {seller.price_formatted ?? formatPrice(seller.price, currency)}
                 </span>
                 {seller.delta_from_lowest_formatted ? (

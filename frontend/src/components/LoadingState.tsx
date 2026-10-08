@@ -14,10 +14,6 @@ interface LoadingStateProps {
   className?: string
 }
 
-/**
- * Staged progress indicator. Stages advance on real network boundaries
- * (image upload, vision call, SerpApi call) - not on fake timers.
- */
 export function LoadingState({ title, subtitle, stages, className }: LoadingStateProps) {
   return (
     <div

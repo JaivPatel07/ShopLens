@@ -1,6 +1,5 @@
 import { cx } from '../lib/format'
 
-/** SnapBuy mark: a shopping tag merged with a search/scan frame. */
 export function Logo({ className }: { className?: string }) {
   return (
     <span
