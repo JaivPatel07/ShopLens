@@ -30,9 +30,11 @@ import asyncio
 import json
 import logging
 import re
+import ssl
 from typing import Any, Protocol
 
 import httpx
+import truststore
 
 from app.config import settings
 from app.data.demo_data import DEMO_VISION_RESULT
@@ -45,6 +47,14 @@ from app.utils.errors import (
 from app.utils.images import PreparedImage
 
 logger = logging.getLogger("snapbuy.vision")
+
+
+def _http_client(*, timeout: float) -> httpx.AsyncClient:
+    """Use the operating system trust store while retaining TLS validation."""
+    return httpx.AsyncClient(
+        timeout=timeout,
+        verify=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT),
+    )
 
 PROMPT = """You are a product recognition assistant inside a shopping app.
 
@@ -231,7 +241,7 @@ class _HttpVisionProvider:
     async def _post(self, url: str, body: dict, headers: dict) -> httpx.Response:
         """POST JSON and return the raw :class:`httpx.Response`."""
         try:
-            async with httpx.AsyncClient(timeout=settings.vision_timeout_seconds) as client:
+            async with _http_client(timeout=settings.vision_timeout_seconds) as client:
                 response = await client.post(url, json=body, headers=headers)
         except httpx.TimeoutException as exc:
             logger.warning("%s vision request timed out", self.name)
@@ -323,7 +333,11 @@ class OpenAIVisionProvider(_HttpVisionProvider):
                 url, dict(body, response_format={"type": "json_object"}), headers
             )
         except VisionProviderError as exc:
-            if not (exc.detail or "").startswith("HTTP 4"):
+            # A plain retry only helps when JSON mode itself is unsupported.
+            # Never retry authentication, rate-limit, or exhausted-credit
+            # failures: those cannot be fixed by changing the response format
+            # and a second call only consumes more quota.
+            if not (exc.detail or "").startswith(("HTTP 400", "HTTP 404")):
                 raise
             logger.warning(
                 "OpenAI JSON mode unavailable (%s) - retrying without response_format", exc.detail

@@ -16,9 +16,11 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 os.environ.setdefault("DEMO_MODE", "auto")
-os.environ.pop("SERPAPI_API_KEY", None)
-os.environ.pop("VISION_API_KEY", None)
-os.environ.pop("VISION_PROVIDER", None)
+# Empty process values intentionally override any developer-local `.env` file.
+# This keeps the suite offline and prevents it from spending real API credits.
+os.environ["SERPAPI_API_KEY"] = ""
+os.environ["VISION_API_KEY"] = ""
+os.environ["VISION_PROVIDER"] = ""
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

@@ -11,6 +11,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent  # backend/
@@ -31,6 +32,23 @@ class Settings(BaseSettings):
     app_name: str = "SnapBuy API"
     app_version: str = "1.0.0"
     debug: bool = False
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def normalise_debug(cls, value: object) -> object:
+        """Accept common deployment labels as well as regular boolean values.
+
+        Hosting templates frequently use ``DEBUG=release`` or
+        ``DEBUG=development``.  Treating those values explicitly keeps a
+        harmless logging preference from preventing the API from starting.
+        """
+        if isinstance(value, str):
+            normalised = value.strip().lower()
+            if normalised in {"release", "production", "prod", "info", "off"}:
+                return False
+            if normalised in {"development", "dev", "debug", "verbose", "on"}:
+                return True
+        return value
 
     # ---------------------------------------------------------------- SerpApi
     serpapi_api_key: str = ""

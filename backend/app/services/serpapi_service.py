@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import ssl
 import time
 from typing import Any
 
 import httpx
+import truststore
 
 from app.config import settings
 from app.models.product import Product, VisualMatch
@@ -31,6 +33,19 @@ SERPAPI_IMAGE_ENDPOINT = "https://serpapi.com/image"
 
 # HTTP statuses SerpApi uses to signal quota / plan problems.
 _RATE_LIMIT_STATUSES = {401, 429}
+
+
+def _http_client(*, timeout: float) -> httpx.AsyncClient:
+    """Create a client that honours the host operating system's trusted CAs.
+
+    This is important on managed Windows networks, where an HTTPS inspection
+    certificate is trusted by Windows but is not present in Python's bundled
+    certificate file.  Verification remains enabled.
+    """
+    return httpx.AsyncClient(
+        timeout=timeout,
+        verify=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT),
+    )
 
 
 class _TTLCache:
@@ -101,7 +116,7 @@ async def _request(params: dict[str, Any]) -> dict:
 
     query = dict(params, api_key=settings.serpapi_api_key)
     try:
-        async with httpx.AsyncClient(timeout=settings.serpapi_timeout_seconds) as client:
+        async with _http_client(timeout=settings.serpapi_timeout_seconds) as client:
             response = await client.get(SERPAPI_ENDPOINT, params=query)
     except httpx.TimeoutException as exc:
         logger.warning("SerpApi timeout for %s: %s", params.get("q"), exc)
@@ -225,7 +240,7 @@ async def upload_image_for_lens(data: bytes) -> str:
         raise SearchNotConfiguredError()
 
     try:
-        async with httpx.AsyncClient(timeout=settings.serpapi_timeout_seconds) as client:
+        async with _http_client(timeout=settings.serpapi_timeout_seconds) as client:
             response = await client.post(
                 SERPAPI_IMAGE_ENDPOINT,
                 files={"image": ("photo.jpg", data, "image/jpeg")},
