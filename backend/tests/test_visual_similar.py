@@ -105,6 +105,28 @@ def test_visual_cache_avoids_repeat_upload(client, monkeypatch):
     assert calls["upload"] == 1, "identical photo must hit SerpApi only once"
 
 
+def test_lens_invalid_serpapi_key_is_not_mapped_to_generic_502(client, monkeypatch):
+    import httpx
+    from app.config import settings
+
+    lens_service.clear_cache()
+
+    monkeypatch.setattr(settings, "demo_mode", "off")
+    monkeypatch.setattr(settings, "serpapi_api_key", "bad-key")
+
+    class FakeResponse:
+        status_code = 401
+        text = "Invalid API key"
+
+    async def unauthorized(*_args, **_kwargs):
+        return FakeResponse()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", unauthorized)
+    response = client.post("/api/visual-similar", files=_jpeg_upload())
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "search_authentication_failed"
+
+
 def test_shrink_for_upload_enforces_500kb():
     import io
     import os

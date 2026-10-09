@@ -96,6 +96,30 @@ describe('product search flow', () => {
     expect(screen.getByTestId('error')).toHaveTextContent(/couldn't confidently identify/i)
   })
 
+  it('can search with a manual query after local recognition is unavailable', async () => {
+    const { ApiError } = await import('../services/api')
+    analyzeImage.mockRejectedValue(
+      new ApiError('Local image recognition is unavailable. Enter a product name manually.'),
+    )
+    search.mockResolvedValue(makeSearchResponse({ query: 'black running shoes' }))
+
+    const getFlow = renderHarness()
+    await act(async () => {
+      getFlow().selectImage(makeImageFile())
+    })
+    await act(async () => {
+      await getFlow().analyzeImage()
+    })
+    expect(screen.getByTestId('status')).toHaveTextContent('error/idle')
+
+    await act(async () => {
+      getFlow().setQuery('black running shoes')
+      await getFlow().runSearch('black running shoes')
+    })
+    expect(screen.getByTestId('status')).toHaveTextContent('error/success')
+    expect(search).toHaveBeenCalledWith({ query: 'black running shoes', force_refresh: false })
+  })
+
   it('clears everything when the image is removed', async () => {
     analyzeImage.mockResolvedValue(makeAnalysis())
     const getFlow = renderHarness()

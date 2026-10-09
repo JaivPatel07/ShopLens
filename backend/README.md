@@ -7,11 +7,13 @@ No API key ever leaves this process — the frontend only learns *whether* a pro
 
 ## Run
 
-```bash
-cd backend
-python -m venv ../.venv && source ../.venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env                     # add SERPAPI_API_KEY (and a vision key if you have one)
+```powershell
+# Run from the repository root.
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r backend\requirements.txt
+Copy-Item backend\.env.example backend\.env
+Set-Location backend
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -52,6 +54,8 @@ app/
 | POST   | `/api/analyze-image` | multipart `file=@photo.jpg` → `VisionAttributes`                    |
 | POST   | `/api/search`        | `{"query": "..."}` → `SearchResponse`                               |
 | GET    | `/api/search?q=...`  | Same search, query-string form                                      |
+| POST   | `/api/visual-similar`| Multipart image to SerpApi Image API and Google Lens                |
+| GET    | `/api/visual-similar`| Public image URL to Google Lens matches                              |
 
 All errors return `{"error": {"code": "...", "message": "..."}}` with a user-friendly message; the
 technical detail is only written to the server log.
@@ -65,15 +69,18 @@ technical detail is only written to the server log.
 | `rate_limited`           | 429  | SerpApi quota / plan limits                 |
 | `search_error`           | 502  | SerpApi transport or malformed response     |
 | `vision_error`           | 502  | Vision provider failure                     |
+| `local_vision_unavailable` | 503 | Local CLIP is absent/unavailable; use a manual query |
+| `search_authentication_failed` | 503 | SerpApi key was rejected; update server configuration |
 | `search_timeout`         | 504  | SerpApi exceeded `SERPAPI_TIMEOUT_SECONDS`  |
 | `*_not_configured`       | 503  | `DEMO_MODE=off` and the key is missing      |
 
 ## Vision providers
 
-Selected via `VISION_PROVIDER` + `VISION_API_KEY` (auto-detected when the provider is left empty):
+Selected via `VISION_PROVIDER`; local CLIP is the default.
 
 | Provider | Default model chain                              | Notes                                        |
 | -------- | ------------------------------------------------ | -------------------------------------------- |
+| `local`  | `openai/clip-vit-base-patch32` | Estimates a broad category locally; never claims an exact SKU or brand. |
 | `openai` | `gpt-4o-mini` | Chat completions with an inline image; JSON mode with a plain retry |
 | `gemini` | `gemini-3.8-flash` → `gemini-2.5-flash` → `gemini-flash-latest` | `generateContent` with an inline data part   |
 | `demo`   | —                                                | Fixture result, flagged `is_demo: true`       |
@@ -86,6 +93,19 @@ Add a provider by implementing `VisionProvider.analyse()` in `app/services/visio
 registering it in `get_vision_provider()`. Every provider returns the same `VisionAttributes`
 structure, so nothing else in the app changes.
 
+### Local CLIP cache and offline operation
+
+At startup the backend logs the selected local source but does not download model files. On the first image analysis it tries the configured local directory or Hugging Face cache first. On a cache miss it makes at most `LOCAL_VISION_LOAD_ATTEMPTS` (1-3, default 2) download attempts, then returns `local_vision_unavailable` for `LOCAL_VISION_RETRY_SECONDS` (default 60) instead of retrying every upload.
+
+To cache the model on Windows, run this from the repository root while internet access is available:
+
+```powershell
+New-Item -ItemType Directory -Force backend\models\clip-vit-base-patch32 | Out-Null
+python -c "from transformers import CLIPModel, CLIPProcessor; source='openai/clip-vit-base-patch32'; target='backend/models/clip-vit-base-patch32'; CLIPProcessor.from_pretrained(source).save_pretrained(target); CLIPModel.from_pretrained(source).save_pretrained(target)"
+```
+
+Start the backend from `backend/` with `LOCAL_VISION_MODEL_DIR=./models/clip-vit-base-patch32` in `.env`. The directory must contain the files from the command; SnapBuy does not claim offline availability if it is missing or incomplete. When local recognition is unavailable, the frontend preserves the uploaded image and provides a manual text query that still searches live SerpApi Google Shopping results.
+
 ## SerpApi usage
 
 `app/services/serpapi_service.py`
@@ -97,8 +117,8 @@ structure, so nothing else in the app changes.
 * In-memory TTL cache (`SEARCH_CACHE_TTL_SECONDS`, default 15 min) so repeat searches don't spend
   credits; `POST /api/search` with `"force_refresh": true` bypasses both that cache and SerpApi's own
   1-hour cache via `no_cache=true`.
-* Timeouts, transport errors, HTTP 401/429, `{"error": ...}` payloads and malformed JSON are all
-  translated into the friendly errors above.
+* A missing key maps to `503 search_not_configured`; a rejected key maps to `503 search_authentication_failed`; quota/rate limits map to 429; timeouts map to 504; and genuine upstream failures map to 502.
+* Local-image Lens matching uploads to SerpApi's Image API and then uses its short-lived `image_id` with `engine=google_lens`; it does not depend on CLIP.
 * Optional startup connectivity probe (`warmup()`), which never blocks startup.
 
 ## Normalisation rules
@@ -126,7 +146,7 @@ are dropped and the remaining weights re-normalised; if nothing usable remains, 
 
 ```bash
 cd backend
-pytest            # 59 tests, no network access required
+pytest            # 84 tests, no network access required
 ```
 
 `tests/conftest.py` clears the API keys before importing the app, so the suite always exercises the
@@ -144,8 +164,12 @@ See [`.env.example`](.env.example) for every variable. Highlights:
 | `SERPAPI_LOCATION`        | `India`          | Location passed to SerpApi                       |
 | `SERPAPI_FALLBACK_ENGINE` | `true`           | Retry with `tbm=shop` when shopping is empty      |
 | `SEARCH_CACHE_TTL_SECONDS`| `900`            | Search result cache lifetime                     |
-| `VISION_PROVIDER`         | auto             | `openai` / `gemini` / `demo`                     |
-| `VISION_API_KEY`          | —                | Enables real recognition                         |
+| `VISION_PROVIDER`         | `local`          | `local` / `openai` / `gemini` / `demo`           |
+| `LOCAL_VISION_MODEL`      | `openai/clip-vit-base-patch32` | Hugging Face model ID or local path       |
+| `LOCAL_VISION_MODEL_DIR`  | empty            | Existing local model directory; disables downloads |
+| `LOCAL_VISION_LOAD_ATTEMPTS` | `2`            | Bounded cache-miss download attempts (1-3)        |
+| `LOCAL_VISION_RETRY_SECONDS` | `60`          | Cooldown after failed local-model initialization   |
+| `VISION_API_KEY`          | —                | Required only for OpenAI or Gemini                |
 | `DEMO_MODE`               | `auto`           | `auto` / `on` / `off` demo data behaviour         |
 | `MAX_UPLOAD_MB`           | `10`             | Upload size limit                                |
 | `MAX_IMAGE_DIMENSION`     | `1280`           | Downscale target for vision calls                |

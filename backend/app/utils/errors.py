@@ -44,6 +44,17 @@ class VisionProviderError(SnapBuyError):
     message = "The image recognition service is unavailable right now. Please try again."
 
 
+class LocalVisionUnavailableError(SnapBuyError):
+    """The optional local model is absent or cannot be loaded."""
+
+    code = "local_vision_unavailable"
+    status_code = 503
+    message = (
+        "Local image recognition is unavailable. Enter a product name or description "
+        "to search shopping results manually."
+    )
+
+
 class VisionQuotaError(SnapBuyError):
     """The configured vision account cannot accept more API requests."""
 
@@ -65,6 +76,12 @@ class SearchNotConfiguredError(SnapBuyError):
     code = "search_not_configured"
     status_code = 503
     message = "Product search isn't configured on this deployment."
+
+
+class SearchAuthenticationError(SnapBuyError):
+    code = "search_authentication_failed"
+    status_code = 503
+    message = "The shopping search service is not configured with a valid SerpApi key."
 
 
 class SearchProviderError(SnapBuyError):

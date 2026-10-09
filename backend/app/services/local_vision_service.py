@@ -7,19 +7,26 @@ estimate and remains editable before a SerpApi shopping search is made.
 
 from __future__ import annotations
 
+import logging
 import threading
+import time
+from pathlib import Path
 from typing import Any
 
 from PIL import Image
 
 from app.config import settings
 from app.models.search import VisionAttributes
-from app.utils.errors import VisionProviderError
+from app.utils.errors import LocalVisionUnavailableError
 from app.utils.images import PreparedImage
 
 _MODEL_LOCK = threading.Lock()
 _MODEL: Any | None = None
 _PROCESSOR: Any | None = None
+_LOAD_FAILURE_UNTIL = 0.0
+_LOAD_FAILURE_DETAIL = ""
+
+logger = logging.getLogger("snapbuy.local_vision")
 
 # Product categories deliberately favour useful shopping queries over claims of
 # exact product identification.
@@ -47,27 +54,111 @@ _CATEGORIES = (
 )
 
 
+def _configured_model_source() -> tuple[str, bool]:
+    """Return the model source and whether it must be loaded offline."""
+    model_dir = settings.local_vision_model_dir
+    if model_dir:
+        resolved = Path(model_dir).expanduser()
+        if not resolved.is_dir():
+            raise LocalVisionUnavailableError(
+                detail=f"LOCAL_VISION_MODEL_DIR does not exist: {resolved}"
+            )
+        return str(resolved), True
+
+    configured = Path(settings.local_vision_model).expanduser()
+    if configured.is_dir():
+        return str(configured), True
+    return settings.local_vision_model, False
+
+
+def startup_diagnostics() -> None:
+    """Log the load plan without downloading model files during application startup."""
+    try:
+        source, offline_only = _configured_model_source()
+        logger.info(
+            "Local CLIP configured source=%s mode=%s attempts=%s retry_cooldown=%ss",
+            source,
+            "local-directory" if offline_only else "cache-then-network",
+            settings.local_vision_load_attempts,
+            settings.local_vision_retry_seconds,
+        )
+    except LocalVisionUnavailableError as exc:
+        logger.warning("Local CLIP is unavailable at startup: %s", exc.detail)
+
+
 def _load_model() -> tuple[Any, Any]:
-    """Load model weights once per process, not once per upload."""
-    global _MODEL, _PROCESSOR
+    """Load CLIP once, preferring cached/local files before bounded downloads.
+
+    A failed network download is remembered briefly so simultaneous uploads do
+    not each start another large Hugging Face download.
+    """
+    global _MODEL, _PROCESSOR, _LOAD_FAILURE_DETAIL, _LOAD_FAILURE_UNTIL
     if _MODEL is not None and _PROCESSOR is not None:
         return _MODEL, _PROCESSOR
 
     with _MODEL_LOCK:
         if _MODEL is not None and _PROCESSOR is not None:
             return _MODEL, _PROCESSOR
+        if time.monotonic() < _LOAD_FAILURE_UNTIL:
+            raise LocalVisionUnavailableError(detail=_LOAD_FAILURE_DETAIL)
+
         try:
             from transformers import CLIPModel, CLIPProcessor
 
-            _PROCESSOR = CLIPProcessor.from_pretrained(settings.local_vision_model)
-            _MODEL = CLIPModel.from_pretrained(settings.local_vision_model)
-            _MODEL.eval()
+            source, offline_only = _configured_model_source()
+            # Cache/local-directory loading is always tried first. This makes
+            # normal requests fully offline after a successful download.
+            try:
+                processor = CLIPProcessor.from_pretrained(source, local_files_only=True)
+                model = CLIPModel.from_pretrained(source, local_files_only=True)
+                logger.info("Loaded local CLIP from cached/local files: %s", source)
+            except Exception as cache_error:
+                if offline_only:
+                    raise cache_error
+
+                attempts = max(1, min(settings.local_vision_load_attempts, 3))
+                last_error: Exception = cache_error
+                for attempt in range(1, attempts + 1):
+                    try:
+                        logger.info(
+                            "Local CLIP cache miss; downloading %s (attempt %s/%s)",
+                            source,
+                            attempt,
+                            attempts,
+                        )
+                        processor = CLIPProcessor.from_pretrained(source)
+                        model = CLIPModel.from_pretrained(source)
+                        break
+                    except Exception as exc:  # network, Hub, or incomplete-download errors
+                        last_error = exc
+                        if attempt < attempts:
+                            time.sleep(attempt)
+                else:
+                    raise last_error
+
+            model.eval()
+            _PROCESSOR, _MODEL = processor, model
+            _LOAD_FAILURE_DETAIL = ""
+            _LOAD_FAILURE_UNTIL = 0.0
         except Exception as exc:  # model download/cache/device errors
-            raise VisionProviderError(
-                "Local image analysis could not start. Enter a search query manually and try again.",
-                detail=str(exc),
-            ) from exc
+            _LOAD_FAILURE_DETAIL = str(exc)
+            _LOAD_FAILURE_UNTIL = time.monotonic() + max(settings.local_vision_retry_seconds, 1)
+            logger.warning(
+                "Local CLIP failed to load; suppressing retries for %ss: %s",
+                settings.local_vision_retry_seconds,
+                exc,
+            )
+            raise LocalVisionUnavailableError(detail=str(exc)) from exc
     return _MODEL, _PROCESSOR
+
+
+def reset_model_cache() -> None:
+    """Reset process state for tests or an explicit operator reload."""
+    global _MODEL, _PROCESSOR, _LOAD_FAILURE_DETAIL, _LOAD_FAILURE_UNTIL
+    with _MODEL_LOCK:
+        _MODEL = _PROCESSOR = None
+        _LOAD_FAILURE_DETAIL = ""
+        _LOAD_FAILURE_UNTIL = 0.0
 
 
 def _colour_name(image: Image.Image) -> str:
@@ -93,9 +184,12 @@ def _colour_name(image: Image.Image) -> str:
 
 def _analyse_sync(image: PreparedImage) -> VisionAttributes:
     import io
-    import torch
 
     model, processor = _load_model()
+    try:
+        import torch
+    except ImportError as exc:
+        raise LocalVisionUnavailableError(detail="PyTorch is not installed") from exc
     picture = Image.open(io.BytesIO(image.data)).convert("RGB")
     inputs = processor(text=list(_CATEGORIES), images=picture, return_tensors="pt", padding=True)
     with torch.inference_mode():

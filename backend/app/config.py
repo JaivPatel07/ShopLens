@@ -74,6 +74,11 @@ class Settings(BaseSettings):
     vision_base_url: str = ""
     vision_timeout_seconds: float = 45.0
     local_vision_model: str = "openai/clip-vit-base-patch32"
+    # Optional directory created by the model-download command in the README.
+    # When set, no Hugging Face network request is made for local CLIP.
+    local_vision_model_dir: Path | None = None
+    local_vision_load_attempts: int = 2
+    local_vision_retry_seconds: float = 60.0
 
     # ------------------------------------------------------------- behaviour
     demo_mode: DemoMode = "auto"

@@ -43,9 +43,9 @@ describe('landing page', () => {
     renderApp('/')
 
     expect(
-      screen.getByRole('heading', { level: 1, name: /find any product from a single photo/i }),
+      screen.getByRole('heading', { level: 1, name: /see it\. search it\.buy with confidence/i }),
     ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /upload product photo/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /start with a photo/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /from photo to price in four steps/i })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /upload a product photo/i })).toBeInTheDocument()
     expect(screen.getByRole('group', { name: /upload a product photo/i })).toBeInTheDocument()

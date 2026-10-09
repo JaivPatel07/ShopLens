@@ -233,7 +233,33 @@ def test_serpapi_rate_limit_maps_to_429(client, live_search, monkeypatch):
 
     monkeypatch.setattr(httpx.AsyncClient, "get", unauthorized)
     response = client.post("/api/search", json={"query": "nike air max"})
-    assert response.status_code == 429
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "search_authentication_failed"
+
+
+def test_manual_query_still_reaches_serpapi_when_local_recognition_is_unavailable(
+    client, live_search, monkeypatch
+):
+    """The frontend fallback posts this query after a local CLIP 503."""
+    class FakeResponse:
+        status_code = 200
+        text = "{}"
+
+        def json(self):
+            return {
+                "shopping_results": [
+                    {"title": "Manual result", "extracted_price": 999, "source": "Shop"}
+                ]
+            }
+
+    async def ok(*_args, **_kwargs):
+        return FakeResponse()
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", ok)
+    response = client.post("/api/search", json={"query": "black running shoes"})
+    assert response.status_code == 200
+    assert response.json()["is_demo"] is False
+    assert response.json()["products"][0]["title"] == "Manual result"
 
 
 def test_malformed_json_response_is_handled(client, live_search, monkeypatch):

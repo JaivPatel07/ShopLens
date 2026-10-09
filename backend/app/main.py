@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.routes import health, image, lens, search
+from app.services import local_vision_service
 from app.utils.errors import SnapBuyError
 
 logging.basicConfig(
@@ -39,6 +40,8 @@ async def lifespan(app: FastAPI):
         settings.demo_mode,
         settings.serpapi_location,
     )
+    if settings.resolved_vision_provider == "local":
+        local_vision_service.startup_diagnostics()
     if settings.demo_active("search") or settings.demo_active("vision"):
         logger.warning(
             "Demo data is enabled for %s - results will be labelled 'Demo Data' in the UI.",

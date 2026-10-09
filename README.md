@@ -29,7 +29,7 @@ Visual product discovery is frustrating when a product name, brand, or model is 
 SnapBuy combines image analysis with structured shopping search:
 
 1. A user uploads a JPG, PNG, or WEBP image.
-2. A configured vision provider identifies the product and proposes an editable search query.
+2. Local CLIP (or an optional hosted vision provider) proposes an editable search query. If recognition is unavailable, the user can enter the query manually.
 3. SerpApi retrieves Google Shopping listings for that query.
 4. The backend normalizes inconsistent listing fields, calculates price statistics, and makes an explainable recommendation.
 5. The React interface displays listings, seller offers, visual matches, filters, and direct merchant links.
@@ -40,7 +40,7 @@ SnapBuy combines image analysis with structured shopping search:
 
 - Image upload by click, drag-and-drop, or paste, with client and server validation.
 - Image preview, replacement, and removal before search.
-- Free local CLIP image classification that produces an explicitly estimated, editable product category query.
+- Free local CLIP image classification with cache-first loading, bounded download retries, and an explicitly estimated, editable product category query.
 - Optional OpenAI- or Gemini-compatible vision providers when paid API access is available.
 - Editable search query before any shopping request is made.
 - Live Google Shopping search through SerpApi (`google_shopping`), with a Google Shop-tab fallback when needed.
@@ -103,6 +103,8 @@ SerpApi is the live shopping data source. The backend calls `https://serpapi.com
 
 Raw provider payloads never reach the browser. The backend turns them into stable product fields such as title, numeric price, formatted price, merchant, rating, reviews, thumbnail, link, delivery, and discount. Fields that SerpApi does not return are treated as optional, so some cards or comparisons may not show every attribute. Search responses are cached in memory for 15 minutes by default; a refresh can bypass the cache.
 
+For a local file, visual similarity is independent of CLIP recognition: SnapBuy sends a resized image to SerpApi's Image API, receives a short-lived `image_id`, then queries `engine=google_lens`. A CLIP failure therefore does not prevent manual Google Shopping searches or Lens requests.
+
 ## Architecture
 
 ```mermaid
@@ -128,18 +130,18 @@ flowchart TB
 
 ### 1. Clone and configure
 
-```bash
+```powershell
 git clone <your-repository-url>
 cd SerpApi-India-Hackathon-
-copy backend\.env.example backend\.env
-copy frontend\.env.example frontend\.env
+Copy-Item backend\.env.example backend\.env
+Copy-Item frontend\.env.example frontend\.env
 ```
 
 On macOS or Linux, use `cp` instead of `copy`. Fill in `backend/.env` as described below. Never commit this file.
 
 ### 2. Start the backend
 
-```bash
+```powershell
 python -m venv .venv
 .venv\Scripts\activate
 python -m pip install -r backend/requirements.txt
@@ -148,6 +150,27 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 On macOS or Linux, activate the environment with `source .venv/bin/activate`. The API is available at `http://127.0.0.1:8000`, with interactive documentation at `http://127.0.0.1:8000/docs`.
+
+### Local CLIP model cache (Windows PowerShell)
+
+Local recognition is optional: if it cannot load, the UI keeps the uploaded photo and shows an editable manual search field. That manual query still uses the existing SerpApi Google Shopping integration.
+
+For a reliable offline local-model setup, download the model once while the network is available, from the repository root with the virtual environment activated:
+
+```powershell
+New-Item -ItemType Directory -Force backend\models\clip-vit-base-patch32 | Out-Null
+python -c "from transformers import CLIPModel, CLIPProcessor; source='openai/clip-vit-base-patch32'; target='backend/models/clip-vit-base-patch32'; CLIPProcessor.from_pretrained(source).save_pretrained(target); CLIPModel.from_pretrained(source).save_pretrained(target)"
+```
+
+Then add this to `backend/.env` before starting the backend from `backend/`:
+
+```ini
+LOCAL_VISION_MODEL_DIR=./models/clip-vit-base-patch32
+LOCAL_VISION_LOAD_ATTEMPTS=2
+LOCAL_VISION_RETRY_SECONDS=60
+```
+
+`LOCAL_VISION_MODEL_DIR` must contain the files produced by the command. If it is absent or incomplete, SnapBuy reports `local_vision_unavailable` (HTTP 503); it does not claim offline recognition works or repeatedly retry a failed download. Without that setting, SnapBuy first uses the Hugging Face cache and only then makes up to two bounded download attempts.
 
 ### 3. Start the frontend
 
@@ -174,6 +197,21 @@ npm test
 npm run build
 ```
 
+## Failure behaviour
+
+All errors use `{ "error": { "code": "…", "message": "…" } }`; internal provider details remain in server logs.
+
+| Situation | HTTP | Code | What to do |
+| --- | --- | --- | --- |
+| Local CLIP files are missing or cannot download | 503 | `local_vision_unavailable` | Use the manual query field, or download/cache the model as described above. |
+| SerpApi key is absent | 503 | `search_not_configured` | Set `SERPAPI_API_KEY` in `backend/.env`. |
+| SerpApi key is rejected | 503 | `search_authentication_failed` | Replace the invalid backend-only key. |
+| SerpApi quota or rate limit | 429 | `rate_limited` | Wait for quota/rate-limit availability. |
+| SerpApi request times out | 504 | `search_timeout` | Retry later or adjust the backend timeout. |
+| SerpApi/Lens transport or malformed upstream response | 502 | `search_error` | Retry later; the upstream service is unavailable or returned an invalid response. |
+
+Demo responses are always marked `is_demo: true`; live SerpApi responses are `is_demo: false`.
+
 ## Environment variables
 
 Copy the supplied templates; they contain no secrets.
@@ -185,6 +223,9 @@ Copy the supplied templates; they contain no secrets.
 | `SERPAPI_API_KEY` | Live shopping and Lens | empty | Keep this server-side only. |
 | `VISION_PROVIDER` | Vision selection | `local` | `local` is free and default; `openai`, `gemini`, and `demo` remain optional. |
 | `LOCAL_VISION_MODEL` | Local image classifier | `openai/clip-vit-base-patch32` | Downloaded once, then held in process memory. It estimates broad categories, not exact SKUs. |
+| `LOCAL_VISION_MODEL_DIR` | Offline local classifier | empty | Existing CLIP directory. When set, network download is disabled. |
+| `LOCAL_VISION_LOAD_ATTEMPTS` | Cache-miss downloads | `2` | Bounded to 1â€“3 attempts per initialization. |
+| `LOCAL_VISION_RETRY_SECONDS` | Failed-load cooldown | `60` | Requests during the cooldown return a helpful 503 instead of retrying downloads. |
 | `VISION_API_KEY` | Optional hosted recognition | empty | Only needed when selecting OpenAI or Gemini. |
 | `VISION_MODEL` | Optional model override | provider fallback list | Pin a provider-specific model when needed. |
 | `VISION_BASE_URL` | Optional compatible API host | provider default | Useful for a compatible gateway. |

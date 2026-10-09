@@ -10,7 +10,12 @@ import pytest
 from app.config import settings
 from app.models.search import VisionAttributes
 from app.services import vision_service
-from app.utils.errors import NoProductDetectedError, VisionProviderError, VisionQuotaError
+from app.utils.errors import (
+    LocalVisionUnavailableError,
+    NoProductDetectedError,
+    VisionProviderError,
+    VisionQuotaError,
+)
 from app.utils.images import PreparedImage
 
 
@@ -223,6 +228,63 @@ def test_local_provider_uses_the_local_classifier(monkeypatch, prepared_image):
 
     monkeypatch.setattr(vision_service.local_vision_service, "analyse_image", fake_analyse)
     assert asyncio.run(vision_service.LocalVisionProvider().analyse(prepared_image)) is expected
+
+
+def test_local_model_failure_is_a_retryable_503_for_manual_search(client, jpeg_image, monkeypatch):
+    """A missing model must not be presented as an upstream 502 failure."""
+    import asyncio
+
+    monkeypatch.setattr("app.config.settings.vision_provider", "local")
+
+    async def unavailable(_image):
+        raise LocalVisionUnavailableError(detail="connection reset while downloading model")
+
+    monkeypatch.setattr(vision_service.local_vision_service, "analyse_image", unavailable)
+    response = client.post(
+        "/api/analyze-image",
+        files={"file": ("product.jpg", jpeg_image, "image/jpeg")},
+    )
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "local_vision_unavailable"
+    assert "manual" in response.json()["error"]["message"].lower()
+
+
+def test_local_model_failed_load_uses_cooldown(monkeypatch):
+    """One outage must not trigger a fresh Hub download for every upload."""
+    import sys
+    import types
+
+    from app.services import local_vision_service
+
+    calls = {"processor": 0}
+
+    class BrokenProcessor:
+        @classmethod
+        def from_pretrained(cls, *_args, **_kwargs):
+            calls["processor"] += 1
+            raise OSError("connection reset")
+
+    class BrokenModel:
+        @classmethod
+        def from_pretrained(cls, *_args, **_kwargs):
+            raise AssertionError("model should not load after processor failure")
+
+    monkeypatch.setitem(
+        sys.modules,
+        "transformers",
+        types.SimpleNamespace(CLIPModel=BrokenModel, CLIPProcessor=BrokenProcessor),
+    )
+    monkeypatch.setattr("app.config.settings.local_vision_model", "missing-model")
+    monkeypatch.setattr("app.config.settings.local_vision_load_attempts", 2)
+    monkeypatch.setattr("app.config.settings.local_vision_retry_seconds", 60)
+    local_vision_service.reset_model_cache()
+    with pytest.raises(LocalVisionUnavailableError):
+        local_vision_service._load_model()
+    with pytest.raises(LocalVisionUnavailableError):
+        local_vision_service._load_model()
+    # one cached-only check + two bounded download attempts; the second call is cooled down
+    assert calls["processor"] == 3
+    local_vision_service.reset_model_cache()
 
 
 def test_explicit_gemini_key_is_auto_detected(monkeypatch):

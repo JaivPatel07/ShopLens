@@ -177,6 +177,14 @@
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
 
+  .hero-grid {
+    background-image:
+      linear-gradient(rgb(99 102 241 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(99 102 241 / 0.05) 1px, transparent 1px);
+    background-position: center top;
+    background-size: 42px 42px;
+  }
+
   .card {
     @apply border-ink-100 rounded-2xl border bg-white;
     box-shadow: var(--shadow-soft);

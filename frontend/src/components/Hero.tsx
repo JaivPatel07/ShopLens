@@ -1,4 +1,4 @@
-import { ArrowRight, Camera, ScanSearch, Sparkles, Star, TrendingDown } from 'lucide-react'
+import { ArrowRight, Camera, ScanSearch, Sparkles, Star, TrendingDown, Zap } from 'lucide-react'
 
 const PIPELINE = [
   { icon: Camera, label: 'Upload photo', detail: 'JPG, PNG or WEBP' },
@@ -12,7 +12,7 @@ export function Hero() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   return (
-    <section className="relative overflow-hidden pt-14 pb-16 sm:pt-20 sm:pb-24" aria-labelledby="hero-heading">
+    <section className="hero-grid relative overflow-hidden pt-14 pb-16 sm:pt-20 sm:pb-24" aria-labelledby="hero-heading">
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
         <div className="bg-brand-200/40 absolute -top-32 -left-24 h-96 w-96 animate-[var(--animate-drift)] rounded-full blur-3xl" />
         <div
@@ -26,32 +26,35 @@ export function Hero() {
         <div className="animate-[var(--animate-fade-up)]">
           <p className="border-ink-200 text-ink-600 inline-flex items-center gap-2 rounded-full border bg-white/80 px-3.5 py-1.5 text-xs font-medium shadow-[var(--shadow-soft)] transition-transform duration-300 hover:scale-[1.03]">
             <span className="bg-deal-500 h-1.5 w-1.5 animate-pulse rounded-full" aria-hidden="true" />
-            AI recognition + live shopping search via SerpApi
+            <Zap className="text-brand-600 h-3.5 w-3.5" aria-hidden="true" />
+            Live shopping intelligence via SerpApi
           </p>
 
           <h1
             id="hero-heading"
             className="mt-5 text-4xl leading-[1.08] font-bold tracking-tight sm:text-5xl lg:text-6xl"
           >
-            Find any product <span className="gradient-text">from a single photo.</span>
+            See it. <span className="gradient-text">Search it.</span>
+            <br />Buy with confidence.
           </h1>
 
           <p className="text-ink-600 mt-5 max-w-xl text-base leading-relaxed sm:text-lg">
-            Snap a product. Let AI identify it. Compare real prices across the web.
+            Turn any product photo into a clear shopping decision. Find live offers, compare
+            sellers, and surface the best value without the tab overload.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
             <button type="button" onClick={() => scrollTo('upload')} className="btn-primary btn-lg">
               <Camera className="h-4.5 w-4.5" aria-hidden="true" />
-              Upload Product Photo
+              Start with a photo
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
               type="button"
               onClick={() => scrollTo('how-it-works')}
               className="btn-secondary btn-lg"
             >
-              See How It Works
-              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+              Explore the workflow
             </button>
           </div>
 
@@ -72,10 +75,13 @@ export function Hero() {
         </div>
 
         <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-          <div className="card animate-[var(--animate-float)] relative z-10 p-5 sm:p-6">
+          <div className="border-white/80 animate-[var(--animate-float)] relative z-10 overflow-hidden rounded-[1.75rem] border bg-white/85 p-5 shadow-[0_24px_80px_-30px_rgb(49_46_129_/_0.42)] backdrop-blur-xl sm:p-6">
             <div className="flex items-center justify-between">
-              <p className="label">How SnapBuy works</p>
-              <span className="chip">4 steps</span>
+              <div>
+                <p className="label">SnapBuy intelligence</p>
+                <p className="text-ink-500 mt-1 text-xs">Photo to live price comparison</p>
+              </div>
+              <span className="bg-deal-50 text-deal-700 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold"><span className="bg-deal-500 h-1.5 w-1.5 rounded-full" /> LIVE</span>
             </div>
 
             <ol className="mt-5 space-y-3">
@@ -103,9 +109,24 @@ export function Hero() {
               ))}
             </ol>
 
+            <div className="from-ink-950 via-ink-900 to-brand-950 mt-5 rounded-2xl bg-gradient-to-br p-4 text-white">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-brand-200 text-[10px] font-bold tracking-[0.14em] uppercase">Recognised product</p>
+                  <p className="mt-2 text-lg font-bold">Nike Air Max 270</p>
+                  <p className="mt-1 text-sm text-slate-300">Black running shoes</p>
+                </div>
+                <div className="border-white/10 bg-white/10 rounded-xl border px-2.5 py-2 text-right">
+                  <p className="text-[10px] text-slate-300">Confidence</p>
+                  <p className="text-sm font-bold">92%</p>
+                </div>
+              </div>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="from-deal-400 to-brand-400 h-full w-[92%] rounded-full bg-gradient-to-r" /></div>
+            </div>
+
             <div className="border-ink-100 mt-5 flex items-center justify-between border-t pt-4">
               <div>
-                <p className="text-ink-400 text-xs">Lowest price found</p>
+                <p className="text-ink-400 text-xs">Best price found</p>
                 <p className="text-ink-900 font-mono text-xl font-bold">₹8,499</p>
               </div>
               <div className="text-right">

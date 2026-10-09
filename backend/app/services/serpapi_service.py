@@ -20,6 +20,7 @@ from app.config import settings
 from app.models.product import Product, VisualMatch
 from app.utils.errors import (
     RateLimitError,
+    SearchAuthenticationError,
     SearchNotConfiguredError,
     SearchProviderError,
     SearchTimeoutError,
@@ -32,7 +33,7 @@ SERPAPI_ENDPOINT = "https://serpapi.com/search.json"
 SERPAPI_IMAGE_ENDPOINT = "https://serpapi.com/image"
 
 # HTTP statuses SerpApi uses to signal quota / plan problems.
-_RATE_LIMIT_STATUSES = {401, 429}
+_RATE_LIMIT_STATUSES = {429}
 
 
 def _http_client(*, timeout: float) -> httpx.AsyncClient:
@@ -103,7 +104,9 @@ def _check_payload_errors(payload: dict) -> None:
         return
     lowered = str(error).lower()
     logger.warning("SerpApi reported an error: %s", error)
-    if "run out of searches" in lowered or "plan" in lowered or "api key" in lowered:
+    if "invalid api key" in lowered or "api key is invalid" in lowered:
+        raise SearchAuthenticationError(detail=str(error))
+    if "run out of searches" in lowered or "quota" in lowered or "plan" in lowered:
         raise RateLimitError(
             "The SerpApi account has no searches left for now. Please try again later."
         )
@@ -125,6 +128,9 @@ async def _request(params: dict[str, Any]) -> dict:
         logger.error("SerpApi transport error for %s: %s", params.get("q"), exc)
         raise SearchProviderError(detail=str(exc)) from exc
 
+    if response.status_code == 401:
+        logger.warning("SerpApi authentication failed: %s", response.text[:300])
+        raise SearchAuthenticationError(detail=response.text[:300])
     if response.status_code in _RATE_LIMIT_STATUSES:
         logger.warning("SerpApi rejected the request (%s): %s", response.status_code, response.text[:300])
         raise RateLimitError()
@@ -251,6 +257,9 @@ async def upload_image_for_lens(data: bytes) -> str:
     except httpx.HTTPError as exc:
         raise SearchProviderError(detail=str(exc)) from exc
 
+    if response.status_code == 401:
+        logger.warning("SerpApi Image API authentication failed: %s", response.text[:300])
+        raise SearchAuthenticationError(detail=response.text[:300])
     if response.status_code in _RATE_LIMIT_STATUSES:
         raise RateLimitError()
     if response.status_code >= 400:
@@ -261,9 +270,12 @@ async def upload_image_for_lens(data: bytes) -> str:
     except ValueError as exc:
         raise SearchProviderError(detail="malformed JSON") from exc
 
-    image_id = payload.get("image_id") if isinstance(payload, dict) else None
+    if not isinstance(payload, dict):
+        raise SearchProviderError(detail="unexpected Image API payload type")
+    _check_payload_errors(payload)
+    image_id = payload.get("image_id")
     if not image_id:
-        raise SearchProviderError(detail=str(payload.get("error", "no image_id")))
+        raise SearchProviderError(detail="Image API response did not include image_id")
     return str(image_id)
 
 
