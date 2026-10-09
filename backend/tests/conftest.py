@@ -20,7 +20,7 @@ os.environ.setdefault("DEMO_MODE", "auto")
 # This keeps the suite offline and prevents it from spending real API credits.
 os.environ["SERPAPI_API_KEY"] = ""
 os.environ["VISION_API_KEY"] = ""
-os.environ["VISION_PROVIDER"] = ""
+os.environ["VISION_PROVIDER"] = "demo"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

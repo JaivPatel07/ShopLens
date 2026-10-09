@@ -44,6 +44,17 @@ class VisionProviderError(SnapBuyError):
     message = "The image recognition service is unavailable right now. Please try again."
 
 
+class VisionQuotaError(SnapBuyError):
+    """The configured vision account cannot accept more API requests."""
+
+    code = "vision_quota_exhausted"
+    status_code = 429
+    message = (
+        "Image recognition is unavailable because the configured vision API account has no "
+        "remaining credits. Add credits or configure another vision provider."
+    )
+
+
 class VisionNotConfiguredError(SnapBuyError):
     code = "vision_not_configured"
     status_code = 503

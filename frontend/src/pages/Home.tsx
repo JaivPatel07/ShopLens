@@ -113,8 +113,8 @@ function UploadSection() {
           )}
         </div>
 
-        <div className="mx-auto mt-10 grid 'max-w-6xl' gap-6 lg:max-w-6xl lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div>
+        <div className="mx-auto mt-10 grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="min-w-0">
             {flow.imagePreview && flow.imageFile ? (
               <ImagePreview
                 src={flow.imagePreview}
@@ -180,7 +180,7 @@ function UploadSection() {
             />
           </div>
 
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {flow.isAnalyzing && (
               <LoadingState
                 title="Analyzing your image…"
@@ -214,12 +214,44 @@ function UploadSection() {
                     }
                   />
                 ) : (
-                  <ErrorState
-                    title="Something went wrong while analysing"
-                    message={flow.analyzeError ?? 'Please try again.'}
-                    onRetry={handleIdentify}
-                    retryLabel="Try again"
-                  />
+                  <>
+                    <ErrorState
+                      title="Something went wrong while analysing"
+                      message={flow.analyzeError ?? 'Please try again.'}
+                      onRetry={handleIdentify}
+                      retryLabel="Try again"
+                    />
+                    <div className="card p-5 sm:p-6">
+                      <p className="label">Continue without image analysis</p>
+                      <h3 className="mt-2 text-base font-semibold">Enter a product search yourself</h3>
+                      <p className="text-ink-500 mt-1 text-sm">
+                        Your photo stays selected. Add a product name or category and we&apos;ll search live offers.
+                      </p>
+                      <label htmlFor="manual-search-query" className="sr-only">
+                        Product search query
+                      </label>
+                      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                        <input
+                          id="manual-search-query"
+                          value={flow.searchQuery}
+                          onChange={(event) => flow.setQuery(event.target.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') handleSearch()
+                          }}
+                          placeholder="e.g. black running shoes"
+                          className="field min-w-0 flex-1"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSearch}
+                          disabled={!flow.searchQuery.trim() || flow.isSearching}
+                          className="btn-primary w-full sm:w-auto"
+                        >
+                          Search products
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </>
             )}

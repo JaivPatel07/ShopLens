@@ -74,7 +74,7 @@ Selected via `VISION_PROVIDER` + `VISION_API_KEY` (auto-detected when the provid
 
 | Provider | Default model chain                              | Notes                                        |
 | -------- | ------------------------------------------------ | -------------------------------------------- |
-| `openai` | `gpt-5.2-mini` → `gpt-5.2-chat-latest` → `gpt-4o-mini` | Chat completions with an inline image; JSON mode with a plain retry |
+| `openai` | `gpt-4o-mini` | Chat completions with an inline image; JSON mode with a plain retry |
 | `gemini` | `gemini-3.8-flash` → `gemini-2.5-flash` → `gemini-flash-latest` | `generateContent` with an inline data part   |
 | `demo`   | —                                                | Fixture result, flagged `is_demo: true`       |
 

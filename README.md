@@ -40,7 +40,8 @@ SnapBuy combines image analysis with structured shopping search:
 
 - Image upload by click, drag-and-drop, or paste, with client and server validation.
 - Image preview, replacement, and removal before search.
-- AI-assisted product identification through a configured OpenAI- or Gemini-compatible vision provider.
+- Free local CLIP image classification that produces an explicitly estimated, editable product category query.
+- Optional OpenAI- or Gemini-compatible vision providers when paid API access is available.
 - Editable search query before any shopping request is made.
 - Live Google Shopping search through SerpApi (`google_shopping`), with a Google Shop-tab fallback when needed.
 - Google Lens visual-similarity search through SerpApi for an uploaded photo or public image URL.
@@ -62,7 +63,7 @@ SnapBuy combines image analysis with structured shopping search:
 flowchart LR
   U[User selects product photo] --> F[React validates and previews image]
   F --> A[POST /api/analyze-image]
-  A --> V[Vision provider: OpenAI or Gemini]
+  A --> V[Local CLIP category classifier]
   V --> Q[Editable product search query]
   Q --> S[POST /api/search]
   S --> G[SerpApi Google Shopping]
@@ -87,7 +88,7 @@ SerpApi supplies shopping and Lens search results; it does **not** perform the i
 | HTTP | HTTPX, Truststore | Provider requests using the operating system trust store |
 | Image handling | Pillow | Validate, orient, resize, and re-encode uploads |
 | Product discovery | SerpApi | Google Shopping and Google Lens results |
-| Vision | OpenAI or Google Gemini HTTP API | Product identification and query generation |
+| Vision | Local CLIP via Transformers and PyTorch | Free estimated category and search-query generation |
 | Testing | pytest, Vitest, Testing Library | Backend and frontend test suites |
 
 There is no database. Recent searches are stored only in the browser's `localStorage`; uploaded images are processed in memory.
@@ -109,7 +110,7 @@ flowchart TB
   Browser[Browser: React + Vite] -->|/api/*| API[FastAPI]
   Browser -->|localStorage| History[Recent searches: client only]
   API --> Image[Image validation and Pillow processing]
-  Image --> Vision[OpenAI or Gemini vision API]
+  Image --> Vision[Local CLIP model: process memory cache]
   API --> Search[Search and comparison services]
   Search --> Serp[SerpApi: Google Shopping / Google Lens]
   Search --> Normalize[Normalization, summaries, seller grouping, scoring]
@@ -123,7 +124,7 @@ flowchart TB
 - Node.js and npm
 - Python 3.10+
 - A [SerpApi API key](https://serpapi.com/manage-api-key) for live shopping and Lens data
-- An OpenAI or Gemini API key for live image recognition
+- Internet access on the first local analysis to download the CLIP model weights; subsequent analyses use the local model cache
 
 ### 1. Clone and configure
 
@@ -182,8 +183,9 @@ Copy the supplied templates; they contain no secrets.
 | Variable | Required for | Default | Notes |
 | --- | --- | --- | --- |
 | `SERPAPI_API_KEY` | Live shopping and Lens | empty | Keep this server-side only. |
-| `VISION_PROVIDER` | Vision selection | auto-detect | `openai`, `gemini`, or `demo`. |
-| `VISION_API_KEY` | Live image recognition | empty | OpenAI or Gemini key matching the provider. |
+| `VISION_PROVIDER` | Vision selection | `local` | `local` is free and default; `openai`, `gemini`, and `demo` remain optional. |
+| `LOCAL_VISION_MODEL` | Local image classifier | `openai/clip-vit-base-patch32` | Downloaded once, then held in process memory. It estimates broad categories, not exact SKUs. |
+| `VISION_API_KEY` | Optional hosted recognition | empty | Only needed when selecting OpenAI or Gemini. |
 | `VISION_MODEL` | Optional model override | provider fallback list | Pin a provider-specific model when needed. |
 | `VISION_BASE_URL` | Optional compatible API host | provider default | Useful for a compatible gateway. |
 | `DEMO_MODE` | Demo behavior | `auto` | `auto`, `on`, or `off`. `off` returns errors rather than sample data when credentials are absent. |

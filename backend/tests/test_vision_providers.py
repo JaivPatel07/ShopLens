@@ -10,7 +10,7 @@ import pytest
 from app.config import settings
 from app.models.search import VisionAttributes
 from app.services import vision_service
-from app.utils.errors import NoProductDetectedError, VisionProviderError
+from app.utils.errors import NoProductDetectedError, VisionProviderError, VisionQuotaError
 from app.utils.images import PreparedImage
 
 
@@ -196,7 +196,7 @@ def test_provider_handles_unparseable_model_output(monkeypatch, prepared_image):
 def test_provider_factory_selects_by_configuration(monkeypatch):
     monkeypatch.setattr("app.config.settings.vision_api_key", "")
     monkeypatch.setattr("app.config.settings.vision_provider", "")
-    assert isinstance(vision_service.get_vision_provider(), vision_service.DemoVisionProvider)
+    assert isinstance(vision_service.get_vision_provider(), vision_service.LocalVisionProvider)
 
     monkeypatch.setattr("app.config.settings.vision_api_key", "sk-test")
     monkeypatch.setattr("app.config.settings.vision_provider", "openai")
@@ -204,6 +204,25 @@ def test_provider_factory_selects_by_configuration(monkeypatch):
 
     monkeypatch.setattr("app.config.settings.vision_provider", "gemini")
     assert isinstance(vision_service.get_vision_provider(), vision_service.GeminiVisionProvider)
+
+
+def test_local_provider_uses_the_local_classifier(monkeypatch, prepared_image):
+    import asyncio
+
+    expected = VisionAttributes(
+        product_name="Estimated category: Backpack",
+        category="backpack",
+        search_query="black backpack",
+        provider="local-clip",
+        is_demo=False,
+    )
+
+    async def fake_analyse(image):
+        assert image is prepared_image
+        return expected
+
+    monkeypatch.setattr(vision_service.local_vision_service, "analyse_image", fake_analyse)
+    assert asyncio.run(vision_service.LocalVisionProvider().analyse(prepared_image)) is expected
 
 
 def test_explicit_gemini_key_is_auto_detected(monkeypatch):
@@ -277,6 +296,25 @@ def test_provider_does_not_retry_on_non_model_errors(monkeypatch, prepared_image
     with pytest.raises(VisionProviderError):
         asyncio.run(provider.analyse(prepared_image))
     assert calls["count"] == 1
+
+
+def test_provider_reports_exhausted_openai_credits(monkeypatch, prepared_image):
+    import asyncio
+
+    class FakeResponse:
+        status_code = 429
+        text = '{"error":{"code":"credit_balance_exhausted"}}'
+
+        def json(self):
+            return {}
+
+    async def fake_post(*_args, **_kwargs):
+        return FakeResponse()
+
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
+    provider = vision_service.OpenAIVisionProvider("key")
+    with pytest.raises(VisionQuotaError):
+        asyncio.run(provider.analyse(prepared_image))
 
 
 def test_gemini_provider_falls_back_when_a_model_is_retired(monkeypatch, prepared_image):

@@ -67,12 +67,13 @@ class Settings(BaseSettings):
     search_cache_ttl_seconds: int = 900
 
     # ------------------------------------------------------------ AI vision
-    # provider: "openai" | "gemini" | "demo" | "" (auto-detect)
-    vision_provider: str = ""
+    # provider: "local" | "openai" | "gemini" | "demo" | "" (local)
+    vision_provider: str = "local"
     vision_api_key: str = ""
     vision_model: str = ""
     vision_base_url: str = ""
     vision_timeout_seconds: float = 45.0
+    local_vision_model: str = "openai/clip-vit-base-patch32"
 
     # ------------------------------------------------------------- behaviour
     demo_mode: DemoMode = "auto"
@@ -94,27 +95,33 @@ class Settings(BaseSettings):
 
     @property
     def vision_configured(self) -> bool:
-        return bool(self.vision_api_key.strip())
+        # Local CLIP needs no credential. Avoid resolving the provider here:
+        # `resolved_vision_provider` itself checks this property for hosted keys.
+        return self.vision_provider.strip().lower() in {"", "local"} or bool(
+            self.vision_api_key.strip()
+        )
 
     @property
     def resolved_vision_provider(self) -> str:
         """Provider name that will actually be used to analyse images."""
         explicit = self.vision_provider.strip().lower()
         if explicit:
+            if explicit == "local":
+                return "local"
             if explicit == "demo":
                 return "demo"
             if explicit in {"openai", "gemini"} and self.vision_configured:
                 return explicit
             # Explicit provider requested but key missing -> demo (auto) or demo.
             return "demo" if self.demo_mode != "off" else explicit
-        if self.vision_configured:
+        if self.vision_api_key.strip():
             # Default to Gemini when a Google-style key is supplied, else OpenAI.
             if self.vision_api_key.startswith("AIza") or self.vision_base_url.startswith(
                 "https://generativelanguage"
             ):
                 return "gemini"
             return "openai"
-        return "demo"
+        return "local"
 
     def demo_active(self, capability: Literal["vision", "search"]) -> bool:
         """Should ``capability`` serve clearly-labelled demo data?"""

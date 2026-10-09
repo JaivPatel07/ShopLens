@@ -16,6 +16,7 @@ configuration and every provider returns the same structured payload:
 
 Supported providers
 -------------------
+``local``   CLIP image classifier running on the backend (default; no paid API).
 ``openai``  GPT-4o class models via the OpenAI chat-completions API.
 ``gemini``  Google Gemini via ``generateContent``.
 ``demo``    Fixture data, clearly flagged as demo (used when no key is set).
@@ -39,10 +40,12 @@ import truststore
 from app.config import settings
 from app.data.demo_data import DEMO_VISION_RESULT
 from app.models.search import VisionAttributes
+from app.services import local_vision_service
 from app.utils.errors import (
     NoProductDetectedError,
     VisionNotConfiguredError,
     VisionProviderError,
+    VisionQuotaError,
 )
 from app.utils.images import PreparedImage
 
@@ -218,6 +221,15 @@ class DemoVisionProvider:
         return attributes
 
 
+class LocalVisionProvider:
+    """Local CLIP classifier that produces an estimated, editable query."""
+
+    name = "local-clip"
+
+    async def analyse(self, image: PreparedImage) -> VisionAttributes:
+        return await local_vision_service.analyse_image(image)
+
+
 class _HttpVisionProvider:
     """Shared retry/fallback plumbing for the hosted providers.
 
@@ -277,6 +289,9 @@ class _HttpVisionProvider:
                     raise VisionProviderError(detail="malformed JSON") from exc
 
             last_detail = f"HTTP {response.status_code}"
+            if response.status_code == 429 and "credit_balance_exhausted" in response.text:
+                logger.warning("%s API account has exhausted its credit balance", self.name)
+                raise VisionQuotaError(detail="credit_balance_exhausted")
             is_last = index == len(self.models) - 1
             if self._looks_like_model_error(response.status_code, response.text) and not is_last:
                 logger.warning(
@@ -296,7 +311,10 @@ class OpenAIVisionProvider(_HttpVisionProvider):
 
     name = "openai"
     #: Tried in order when the configured model is unavailable.
-    candidate_models = ("gpt-5.2-mini", "gpt-5.2-chat-latest", "gpt-4o-mini")
+    # `gpt-4o-mini` supports image input through Chat Completions and is
+    # available to the configured project. Keep this list conservative: trying
+    # retired or unavailable aliases adds avoidable latency before a real call.
+    candidate_models = ("gpt-4o-mini",)
 
     def _model_field(self, model: str) -> dict:
         return {"model": model}
@@ -408,6 +426,9 @@ class GeminiVisionProvider(_HttpVisionProvider):
                 return _to_attributes(_extract_json(answer), self.name, is_demo=False)
 
             last_detail = f"HTTP {response.status_code}"
+            if response.status_code == 429 and "credit_balance_exhausted" in response.text:
+                logger.warning("%s API account has exhausted its credit balance", self.name)
+                raise VisionQuotaError(detail="credit_balance_exhausted")
             is_last = index == len(self.models) - 1
             if self._looks_like_model_error(response.status_code, response.text) and not is_last:
                 logger.warning(
@@ -434,6 +455,8 @@ def get_vision_provider() -> VisionProvider:
     so a misconfigured production deployment fails loudly.
     """
     provider = settings.resolved_vision_provider
+    if provider == "local":
+        return LocalVisionProvider()
     if provider == "openai" and settings.vision_configured:
         return OpenAIVisionProvider(
             settings.vision_api_key, settings.vision_model, settings.vision_base_url
