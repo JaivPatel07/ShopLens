@@ -109,7 +109,7 @@ server proxies those to FastAPI, so no secret ever reaches the browser bundle.
 
 ```bash
 cd backend
-python -m venv ../.venv && source ../.venv/bin/activate   # optional
+python -m venv ../.venv && source ../.venv/Scripts/activate   # optional
 pip install -r requirements.txt
 cp .env.example .env        # add your keys
 uvicorn app.main:app --reload --port 8000
