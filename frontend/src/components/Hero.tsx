@@ -1,4 +1,4 @@
-import { ArrowRight, Camera, ScanSearch, Search, Sparkles, TrendingDown, Zap } from 'lucide-react'
+import { ArrowRight, Camera, ScanSearch, Search, Sparkles, TrendingDown } from 'lucide-react'
 
 const STATS = [
   { value: 'Google Lens', label: 'Visual search engine' },
@@ -38,8 +38,8 @@ export function Hero() {
         <div className="flex justify-center animate-[var(--animate-fade-in)]">
           <p className="inline-flex items-center gap-2 rounded-full border border-brand-200/80 bg-white/90 px-4 py-1.5 text-xs font-semibold text-brand-700 shadow-[var(--shadow-soft)] backdrop-blur-sm transition-transform duration-300 hover:scale-[1.04]">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-deal-500" aria-hidden="true" />
-            <Zap className="h-3.5 w-3.5 text-brand-500" aria-hidden="true" />
-            Powered by SerpApi · Hackathon Edition 2026
+            <Sparkles className="h-3.5 w-3.5 text-brand-500" aria-hidden="true" />
+            Visual Search &amp; Live Price Comparison
           </p>
         </div>
 

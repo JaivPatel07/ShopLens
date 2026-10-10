@@ -59,7 +59,7 @@ async function request<T>(path: string, init: RequestInit = {}, timeoutMs = DEFA
       throw new ApiError('That request took too long. Please try again.', 'timeout', 0)
     }
     throw new ApiError(
-      'We could not reach the SnapBuy server. Check your connection and try again.',
+      'We could not reach the ShopLens server. Check your connection and try again.',
       'network_error',
       0,
     )

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowUpRight, CodeXml, Sparkles } from 'lucide-react'
+import { ArrowUpRight, CodeXml } from 'lucide-react'
 import { Logo } from './Logo'
 
 const CURRENT_YEAR = new Date().getFullYear()
@@ -14,15 +14,11 @@ export function Footer() {
         <div className="md:col-span-2">
           <div className="flex items-center gap-2.5">
             <Logo />
-            <span className="text-ink-900 text-lg font-bold tracking-tight">SnapBuy</span>
+            <span className="text-ink-900 text-lg font-bold tracking-tight">ShopLens</span>
           </div>
           <p className="text-ink-500 mt-3 max-w-sm text-sm leading-relaxed">
             Snap it. Compare it. Buy smarter. Find the best products and prices from a single
             photo.
-          </p>
-          <p className="text-ink-400 mt-4 inline-flex items-center gap-2 text-xs">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            Built for the SerpApi India Hackathon
           </p>
         </div>
 
@@ -55,7 +51,7 @@ export function Footer() {
           <ul className="mt-3 space-y-2 text-sm">
             <li>
               <Link to="/about" className={FOOTER_LINK}>
-                <span className="link-underline">About SnapBuy</span>
+                <span className="link-underline">About ShopLens</span>
                 <ArrowUpRight className="h-3 w-3 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" aria-hidden="true" />
               </Link>
             </li>
@@ -87,7 +83,7 @@ export function Footer() {
 
       <div className="border-ink-100 border-t">
         <div className="container-page text-ink-400 flex flex-col gap-2 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>© {CURRENT_YEAR} SnapBuy. Prices and availability come from live search results and may change.</p>
+          <p>© {CURRENT_YEAR} ShopLens. Prices and availability come from live search results and may change.</p>
           <p>Product identification by AI · Search results by SerpApi</p>
         </div>
       </div>

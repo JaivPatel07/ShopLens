@@ -2,28 +2,61 @@ import { cx } from '../lib/format'
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <span
-      className={cx(
-        'from-brand-600 to-accent-600 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br shadow-[var(--shadow-glow)]',
-        className,
-      )}
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 512 512"
+      fill="none"
+      className={cx('h-9 w-9 shrink-0 drop-shadow-sm', className)}
+      role="img"
       aria-hidden="true"
     >
-      <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" role="img">
-        <path
-          d="M4.5 3.75h5.1a2.25 2.25 0 0 1 1.59.66l7.02 7.02a2.25 2.25 0 0 1 0 3.18l-4.44 4.44a2.25 2.25 0 0 1-3.18 0L3.6 12.06a2.25 2.25 0 0 1-.66-1.59V5.25c0-.83.67-1.5 1.5-1.5Z"
-          stroke="white"
-          strokeWidth="1.6"
-          strokeLinejoin="round"
-        />
-        <circle cx="7.95" cy="7.95" r="1.35" fill="white" />
-        <path
-          d="M12.4 17.1c1.4 1.4 3.9 1.35 5.5-.25 1.6-1.6 1.65-4.1.25-5.5"
-          stroke="white"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-      </svg>
-    </span>
+      <defs>
+        <linearGradient id="shoplens-brand" x1="100" y1="90" x2="405" y2="420" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#D946EF" />
+          <stop offset=".52" stopColor="#7C3AED" />
+          <stop offset="1" stopColor="#1677FF" />
+        </linearGradient>
+        <linearGradient id="shoplens-lens" x1="180" y1="170" x2="330" y2="340" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#FFFFFF" />
+          <stop offset="1" stopColor="#C4B5FD" />
+        </linearGradient>
+      </defs>
+
+      {/* Shopping bag handle */}
+      <path
+        d="M190 166V137C190 100 219 72 256 72C293 72 322 100 322 137V166"
+        stroke="url(#shoplens-brand)"
+        strokeWidth="20"
+        strokeLinecap="round"
+      />
+
+      {/* Bag body */}
+      <path
+        d="M147 153 Q147 137 164 137 H348 Q365 137 368 155 L398 366 Q402 393 375 393 H137 Q110 393 114 366Z"
+        fill="url(#shoplens-brand)"
+      />
+
+      {/* Scanning speed lines */}
+      <path
+        d="M77 220H119 M57 256H110 M77 292H113"
+        stroke="url(#shoplens-brand)"
+        strokeWidth="12"
+        strokeLinecap="round"
+      />
+
+      {/* Scan corners */}
+      <g stroke="#FFFFFF" strokeWidth="11" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M184 206V191H202" />
+        <path d="M328 191H346V209" />
+        <path d="M184 310V328H202" />
+        <path d="M328 328H346V310" />
+      </g>
+
+      {/* Camera lens */}
+      <circle cx="265" cy="260" r="65" fill="#190D35" stroke="#FFFFFF" strokeWidth="12" />
+      <circle cx="265" cy="260" r="43" fill="#26154E" />
+      <circle cx="265" cy="260" r="25" fill="url(#shoplens-lens)" />
+      <circle cx="273" cy="251" r="9" fill="#FFFFFF" opacity=".8" />
+    </svg>
   )
 }

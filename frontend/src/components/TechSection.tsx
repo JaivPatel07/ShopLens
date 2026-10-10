@@ -6,22 +6,22 @@ const PIPELINE = [
   { label: 'Search Query Generation', owner: 'ai' },
   { label: 'SerpApi', owner: 'serpapi' },
   { label: 'Shopping Results', owner: 'serpapi' },
-  { label: 'Normalization', owner: 'snapbuy' },
-  { label: 'Price Intelligence', owner: 'snapbuy' },
-  { label: 'User Recommendation', owner: 'snapbuy' },
+  { label: 'Normalization', owner: 'shoplens' },
+  { label: 'Price Intelligence', owner: 'shoplens' },
+  { label: 'User Recommendation', owner: 'shoplens' },
 ] as const
 
 const OWNER_STYLE: Record<string, string> = {
   ai: 'border-brand-200 bg-brand-50 text-brand-700',
   serpapi: 'border-deal-200 bg-deal-50 text-deal-700',
-  snapbuy: 'border-ink-200 bg-white text-ink-700',
+  shoplens: 'border-ink-200 bg-white text-ink-700',
   you: 'border-ink-200 bg-ink-50 text-ink-600',
 }
 
 const OWNER_LABEL: Record<string, string> = {
   ai: 'AI',
   serpapi: 'SerpApi',
-  snapbuy: 'SnapBuy',
+  shoplens: 'ShopLens',
   you: 'Input',
 }
 
@@ -35,14 +35,14 @@ export function TechSection() {
             Powered by live search data
           </h2>
           <p className="text-ink-600 mt-4 text-base leading-relaxed">
-            SnapBuy splits the work cleanly: AI handles product identification, SerpApi handles
-            retrieving structured shopping results, and SnapBuy handles the comparison and the
+            ShopLens splits the work cleanly: AI handles product identification, SerpApi handles
+            retrieving structured shopping results, and ShopLens handles the comparison and the
             recommendation.
           </p>
         </div>
 
         <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <ol className="space-y-2" aria-label="SnapBuy data pipeline">
+          <ol className="space-y-2" aria-label="ShopLens data pipeline">
             {PIPELINE.map((step, index) => (
               <li key={step.label}>
                 <div
@@ -85,7 +85,7 @@ export function TechSection() {
                 The generated query goes to SerpApi&apos;s{' '}
                 <code className="bg-white/70 rounded px-1.5 py-0.5 text-xs">google_shopping</code>{' '}
                 engine, which returns structured shopping results — titles, prices, sellers,
-                ratings, thumbnails and links — without SnapBuy running or maintaining any scraping
+                ratings, thumbnails and links — without ShopLens running or maintaining any scraping
                 infrastructure.
               </p>
             </article>
@@ -94,7 +94,7 @@ export function TechSection() {
               <span className="bg-ink-100 text-ink-700 flex h-10 w-10 items-center justify-center rounded-xl">
                 <Server className="h-5 w-5" aria-hidden="true" />
               </span>
-              <h3 className="mt-4 text-base font-semibold">SnapBuy builds the comparison</h3>
+              <h3 className="mt-4 text-base font-semibold">ShopLens builds the comparison</h3>
               <p className="text-ink-600 mt-2 text-sm leading-relaxed">
                 FastAPI normalises every result into one shape, calculates the price spread, groups
                 offers per seller and scores the best value. API keys stay server-side — the browser
@@ -105,7 +105,7 @@ export function TechSection() {
             <p className="text-ink-400 flex items-start gap-2 text-xs">
               <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               SerpApi provides the search and shopping data only. Product identification is handled
-              by the AI vision provider — SnapBuy does not claim otherwise.
+              by the AI vision provider — ShopLens does not claim otherwise.
             </p>
           </div>
         </div>

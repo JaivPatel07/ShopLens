@@ -22,7 +22,7 @@ const STEPS = [
   {
     number: '04',
     title: 'Compare',
-    copy: 'SnapBuy compares prices and helps you find the best deal.',
+    copy: 'ShopLens compares prices and helps you find the best deal.',
     icon: GitCompareArrows,
   },
 ]

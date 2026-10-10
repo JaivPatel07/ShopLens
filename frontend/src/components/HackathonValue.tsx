@@ -23,7 +23,7 @@ export function HackathonValue() {
     <section className="py-20 sm:py-24" aria-labelledby="value-heading">
       <div className="container-page grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
         <div>
-          <p className="label">Why SnapBuy</p>
+          <p className="label">Why ShopLens</p>
           <h2 id="value-heading" className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
             Shopping shouldn&apos;t require ten browser tabs.
           </h2>
@@ -33,7 +33,7 @@ export function HackathonValue() {
             different tabs, and hoping you didn&apos;t miss a cheaper listing.
           </p>
           <p className="text-ink-600 mt-4 text-base leading-relaxed">
-            SnapBuy turns a product image into actionable shopping information by combining visual
+            ShopLens turns a product image into actionable shopping information by combining visual
             product recognition with real-time search data. One photo in, one clear set of options
             out.
           </p>
@@ -63,7 +63,7 @@ export function HackathonValue() {
               'You upload a photo of the product.',
               'The AI identifies what it is and builds a search query.',
               'SerpApi fetches live shopping results for that query.',
-              'SnapBuy lists the sellers, prices and ratings — and picks the best value.',
+              'ShopLens lists the sellers, prices and ratings — and picks the best value.',
             ].map((step, index) => (
               <li key={step} className="flex gap-3 text-sm">
                 <span className="bg-brand-600 mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white">
@@ -76,8 +76,8 @@ export function HackathonValue() {
 
           <div className="border-ink-100 mt-6 border-t pt-5">
             <p className="text-ink-500 text-xs leading-relaxed">
-              Built for the SerpApi India Hackathon. Results come from live Google Shopping data via
-              SerpApi, with prices shown in ₹ INR for the Indian market.
+              Results come from live Google Shopping data via SerpApi, with prices shown in ₹ INR
+              for the Indian market.
             </p>
           </div>
         </div>

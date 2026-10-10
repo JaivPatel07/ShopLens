@@ -1,8 +1,8 @@
 <div align="center">
 
-# SnapBuy (ShopLens)
+# ShopLens
 
-### Snap it. Compare it. Buy smarter.
+### See it. Search it. Buy with confidence.
 
 Turn any product photo or keyword into real-time shopping listings, Google Lens visual matches, and an explainable price comparison — powered by SerpApi.
 
@@ -19,9 +19,32 @@ Turn any product photo or keyword into real-time shopping listings, Google Lens 
 
 ---
 
+## 📸 Screenshots & Video Demo
+
+### 🎥 Video Demonstration
+> **Watch the full walkthrough & workflow demo**:  
+> [![ShopLens Demo Video](https://img.shields.io/badge/Demo_Video-Watch_Walkthrough-7c3aed?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/your-demo-video-link)  
+> *(Replace the link above with your hosted video or YouTube/Loom demonstration)*
+
+---
+
+### 🖼️ Screenshots
+
+| 1. Hero & Dual Discovery Options | 2. Upload & Google Lens Visual Matches |
+| :---: | :---: |
+| ![Hero Section](docs/screenshots/hero_discovery.png) | ![Google Lens Matches](docs/screenshots/lens_matches.png) |
+| *Direct text query chips + Drag & Drop photo uploader* | *Pixel-level matches via SerpApi Google Lens* |
+
+| 3. Live Price Comparison & Best Deal | 4. Search Filter & Merchant Breakdown |
+| :---: | :---: |
+| ![Price Comparison](docs/screenshots/price_comparison.png) | ![Filters & Retailers](docs/screenshots/filters_merchants.png) |
+| *Automated Best Deal badge with transparent value scoring* | *Indian merchants (Amazon, Flipkart, etc.) in ₹ INR* |
+
+---
+
 ## Overview
 
-SnapBuy (ShopLens) solves the frustration of visual product discovery. When you spot a product in a video, store window, advertisement, or social post without knowing the exact brand or model, SnapBuy bridges the gap from visual inspiration to confident purchase.
+**ShopLens** solves the frustration of visual product discovery. When you spot a product in a video, store window, advertisement, or social post without knowing the exact brand or model, ShopLens bridges the gap from visual inspiration to confident purchase.
 
 The application delivers **two independent discovery flows**:
 1. **Search by Text**: Direct keyword lookup across Google Shopping via SerpApi, normalized across Indian merchants with price comparisons in INR (`₹`), ratings, and value scoring.
@@ -45,8 +68,8 @@ The application delivers **two independent discovery flows**:
 - **CLIP Visual Reranking**: Compares candidate product thumbnails against the uploaded photo using cosine similarity to rank visually identical products at the top.
 - **Graceful Degradation**: If local vision models are unavailable or unconfident, the user can edit suggested queries or search Google Lens directly without dead ends.
 
-### 4. Modern Hackathon UI & Aesthetics
-- **Deep Midnight Palette**: Midnight Navy foundation (`#070a1c`, `#0d122e`), Electric Violet brand colors (`#6200ea`), Cyan accents (`#06b6d4`), and Emerald deal badges (`#10b981`).
+### 4. Modern UI & Aesthetics
+- **Curated Palette**: Midnight Navy foundation, Electric Violet brand gradients, and Emerald deal badges.
 - **Full-Width Visual Matches Showcase**: Google Lens results displayed in a spacious, responsive 6-column grid with live store badges, ratings, and one-click "Search Deals" buttons.
 - **Animated Radar Scanning Loader**: Dedicated spinner and scanning animation with stage-by-stage progress feedback during image recognition and SerpApi querying.
 - **Explainable Value Scoring**: Transparent scoring (55% price, 30% rating, 15% review volume) highlighting the "Best Deal" with calculated savings.
@@ -194,7 +217,7 @@ cd frontend
 npm test -- --run
 npm run build
 ```
-Validates TypeScript types and generates the optimized production build with 0 errors.
+Validates TypeScript types, runs 62 test cases, and generates the optimized production build with 0 errors.
 
 ---
 

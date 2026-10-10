@@ -26,7 +26,7 @@ export function Navbar() {
   const open = menu.open && menu.at === location.key
   const setOpen = (value: boolean) => setMenu({ open: value, at: location.key })
 
-  const handleTrySnapBuy = () => {
+  const handleTryShopLens = () => {
     setOpen(false)
     if (location.pathname === '/') {
       document.getElementById('upload')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -56,16 +56,12 @@ export function Navbar() {
         <Link
           to="/"
           className="group focus-visible:outline-brand-500 flex items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4"
-          aria-label="SnapBuy home"
+          aria-label="ShopLens home"
         >
           <span className="transition-transform duration-300 group-hover:rotate-[-8deg] group-hover:scale-110">
             <Logo />
           </span>
-          <span className="text-ink-900 text-lg font-bold tracking-tight">SnapBuy</span>
-          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 bg-brand-50 border border-brand-200/80 px-2.5 py-0.5 rounded-full shadow-xs">
-            <span className="h-1.5 w-1.5 rounded-full bg-deal-500 animate-pulse" />
-            SerpApi Hackathon
-          </span>
+          <span className="text-ink-900 text-lg font-bold tracking-tight">ShopLens</span>
         </Link>
 
         <ul className="hidden items-center gap-1 md:flex">
@@ -88,9 +84,9 @@ export function Navbar() {
         </ul>
 
         <div className="flex items-center gap-2">
-          <button type="button" onClick={handleTrySnapBuy} className="btn-primary hidden sm:inline-flex">
+          <button type="button" onClick={handleTryShopLens} className="btn-primary hidden sm:inline-flex">
             <ScanSearch aria-hidden="true" className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" />
-            Try SnapBuy
+            Try ShopLens
           </button>
           <button
             type="button"
@@ -120,9 +116,9 @@ export function Navbar() {
               </li>
             ))}
             <li className="pt-1">
-              <button type="button" onClick={handleTrySnapBuy} className="btn-primary w-full">
+              <button type="button" onClick={handleTryShopLens} className="btn-primary w-full">
                 <ScanSearch aria-hidden="true" className="h-4 w-4" />
-                Try SnapBuy
+                Try ShopLens
               </button>
             </li>
           </ul>

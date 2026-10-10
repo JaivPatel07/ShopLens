@@ -321,7 +321,7 @@ describe('search history', () => {
 
     await waitFor(() => expect(result.current.history.length).toBe(12))
     expect(result.current.history[0].query).toBe('query 14')
-    expect(window.localStorage.getItem('snapbuy.history.v1')).toContain('query 14')
+    expect(window.localStorage.getItem('shoplens.history.v1')).toContain('query 14')
 
     hookAct(() => result.current.clearHistory())
     await waitFor(() => expect(result.current.history).toHaveLength(0))

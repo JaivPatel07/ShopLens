@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { HistoryEntry } from '../types/product'
 
-const STORAGE_KEY = 'snapbuy.history.v1'
+const STORAGE_KEY = 'shoplens.history.v1'
 const MAX_ENTRIES = 12
 
 function readHistory(): HistoryEntry[] {

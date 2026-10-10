@@ -25,7 +25,7 @@ const ITEMS = [
 
 export function TrustStrip() {
   return (
-    <section className="border-ink-100 border-y bg-ink-50/50 py-10" aria-label="What SnapBuy does">
+    <section className="border-ink-100 border-y bg-ink-50/50 py-10" aria-label="What ShopLens does">
       <div className="container-page grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {ITEMS.map((item, index) => (
           <div

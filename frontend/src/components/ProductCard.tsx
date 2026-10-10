@@ -93,7 +93,7 @@ export function ProductCard({ product, highlight = false, badge, index = 0 }: Pr
           {product.value_score !== null && (
             <span
               className="text-brand-600 bg-brand-50 rounded-full px-2 py-0.5 font-semibold"
-              title="SnapBuy value score: 55% price, 30% rating, 15% review volume."
+              title="ShopLens value score: 55% price, 30% rating, 15% review volume."
             >
               Value {Math.round(product.value_score)}
             </span>

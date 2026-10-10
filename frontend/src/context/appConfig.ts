@@ -8,7 +8,7 @@ export interface AppConfigValue {
 }
 
 export const FALLBACK_CONFIG: AppConfig = {
-  app_name: 'SnapBuy API',
+  app_name: 'ShopLens API',
   version: '1.0.0',
   demo_mode: 'auto',
   demo_vision: false,

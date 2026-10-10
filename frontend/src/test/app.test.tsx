@@ -6,7 +6,7 @@ import App from '../App'
 import type { AppConfig } from '../types/product'
 
 const config: AppConfig = {
-  app_name: 'SnapBuy API',
+  app_name: 'ShopLens API',
   version: '1.0.0',
   demo_mode: 'auto',
   demo_vision: false,
@@ -62,14 +62,14 @@ describe('landing page', () => {
     expect(screen.getByRole('heading', { name: /powered by live search data/i })).toBeInTheDocument()
     expect(screen.getByText(/ai does the recognition/i)).toBeInTheDocument()
     expect(screen.getByText(/serpapi does the search/i)).toBeInTheDocument()
-    expect(screen.getByText(/snapbuy builds the comparison/i)).toBeInTheDocument()
+    expect(screen.getByText(/shoplens builds the comparison/i)).toBeInTheDocument()
   })
 
   it('shows the primary calls to action and footer links', () => {
     renderApp('/')
-    expect(screen.getByRole('link', { name: /^snapbuy home$/i })).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: /try snapbuy/i }).length).toBeGreaterThan(0)
-    expect(screen.getByRole('link', { name: /about snapbuy/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^shoplens home$/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /try shoplens/i }).length).toBeGreaterThan(0)
+    expect(screen.getByRole('link', { name: /about shoplens/i })).toBeInTheDocument()
   })
 })
 

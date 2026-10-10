@@ -4,7 +4,7 @@ const FEATURES = [
   {
     icon: ScanEye,
     title: 'Visual Search',
-    copy: 'Skip the typing. Upload a photo and SnapBuy works out what the product is, then writes the search query for you.',
+    copy: 'Skip the typing. Upload a photo and ShopLens works out what the product is, then writes the search query for you.',
   },
   {
     icon: BadgeIndianRupee,
@@ -19,7 +19,7 @@ const FEATURES = [
   {
     icon: Search,
     title: 'Smart Search',
-    copy: 'Refine any search with plain language and SnapBuy runs a fresh SerpApi query for you, then re-compares everything.',
+    copy: 'Refine any search with plain language and ShopLens runs a fresh SerpApi query for you, then re-compares everything.',
   },
 ]
 

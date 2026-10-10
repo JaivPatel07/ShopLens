@@ -42,13 +42,13 @@ export default function About() {
         <div className="container-page max-w-3xl">
           <div className="flex items-center gap-3">
             <Logo />
-            <span className="text-ink-900 text-lg font-bold tracking-tight">SnapBuy</span>
+            <span className="text-ink-900 text-lg font-bold tracking-tight">ShopLens</span>
           </div>
           <h1 className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl">
             Making product discovery simpler.
           </h1>
           <p className="text-ink-600 mt-5 text-base leading-relaxed">
-            SnapBuy is a visual product search and price comparison app. Upload a photo, let AI work
+            ShopLens is a visual product search and price comparison app. Upload a photo, let AI work
             out what the product is, and see what it costs across the web — without opening ten
             browser tabs.
           </p>
@@ -76,7 +76,7 @@ export default function About() {
             The solution
           </h2>
           <p className="text-ink-600 mt-4 leading-relaxed">
-            SnapBuy compresses that workflow into one screen: upload a photo → identify the product →
+            ShopLens compresses that workflow into one screen: upload a photo → identify the product →
             search shopping results → compare prices → find the best deal. The comparison is
             explainable: you can see the query that was searched, the prices that came back, and why
             a particular product was recommended.
@@ -113,13 +113,13 @@ export default function About() {
             Why SerpApi?
           </h2>
           <p className="text-ink-600 mt-4 leading-relaxed">
-            SnapBuy needs structured shopping data — product titles, prices, sellers, ratings,
+            ShopLens needs structured shopping data — product titles, prices, sellers, ratings,
             thumbnails and links — for an arbitrary query, on demand. Building that from scratch
             would mean maintaining headless browsers, rotating proxies, parsing frequently changing
             HTML, and dealing with rate limits and CAPTCHAs.
           </p>
           <p className="text-ink-600 mt-4 leading-relaxed">
-            SerpApi handles all of that infrastructure behind one HTTP API. SnapBuy sends a query to
+            SerpApi handles all of that infrastructure behind one HTTP API. ShopLens sends a query to
             the{' '}
             <code className="bg-ink-100 text-ink-800 rounded px-1.5 py-0.5 text-sm">google_shopping</code>{' '}
             engine and receives structured JSON results it can normalise, compare and rank. That
@@ -149,7 +149,7 @@ export default function About() {
             <div className="flex gap-3">
               <Database className="text-ink-600 mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
               <div>
-                <h3 className="text-sm font-semibold">SnapBuy</h3>
+                <h3 className="text-sm font-semibold">ShopLens</h3>
                 <p className="text-ink-500 mt-1 text-xs leading-relaxed">
                   Normalises, compares and recommends.
                 </p>
@@ -248,13 +248,13 @@ React results dashboard`}
 
         <section className="from-ink-900 to-ink-800 rounded-4xl bg-gradient-to-br px-6 py-10 text-center sm:px-10">
           <Mail className="text-brand-300 mx-auto h-6 w-6" aria-hidden="true" />
-          <h2 className="mt-4 text-xl font-bold text-white">Built for the SerpApi India Hackathon</h2>
+          <h2 className="mt-4 text-xl font-bold text-white">Smart Visual Shopping</h2>
           <p className="text-ink-300 mx-auto mt-3 max-w-xl text-sm leading-relaxed">
-            SnapBuy is an open project demonstrating how product recognition and live search data can
+            ShopLens is an open project demonstrating how product recognition and live search data can
             be combined into a genuinely useful shopping tool.
           </p>
           <Link to="/" className="btn btn-lg bg-white text-ink-900 mt-6 hover:bg-ink-100">
-            Back to SnapBuy
+            Back to ShopLens
           </Link>
         </section>
       </div>

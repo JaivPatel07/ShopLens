@@ -27,7 +27,7 @@ export function FinalCTA() {
                 className="btn btn-lg bg-white text-ink-900 hover:bg-ink-100"
               >
                 <Camera className="h-4 w-4" aria-hidden="true" />
-                Try SnapBuy
+                Try ShopLens
               </button>
               <a
                 href="/about"

@@ -125,7 +125,7 @@ function SearchDiscoverySection() {
       const response = await fetch(DEMO_IMAGE_URL)
       if (!response.ok) throw new Error('demo image unavailable')
       const blob = await response.blob()
-      const file = new File([blob], 'snapbuy-demo-sneaker.jpg', { type: 'image/jpeg' })
+      const file = new File([blob], 'shoplens-demo-sneaker.jpg', { type: 'image/jpeg' })
       await handleImageSelect(file)
     } catch {
       setDemoError('The demo image could not be loaded. Please choose your own photo instead.')
