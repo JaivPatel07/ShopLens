@@ -38,7 +38,7 @@ Turn any product photo or keyword into real-time shopping listings, Google Lens 
 | 3. Live Price Comparison & Best Deal | 4. Search Product |
 | :---: | :---: |
 | ![Price Comparison](image-1.png) | ![alt text](image-2.png) |
-| *Automated Best Deal badge with transparent value scoring* | *Indian merchants (Amazon, Flipkart, etc.) in ₹ INR* |
+| *Automated Best Deal badge with transparent value scoring* | *Search by text or image* |
 
 ---
 
