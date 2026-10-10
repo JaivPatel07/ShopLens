@@ -1,10 +1,17 @@
-import { ArrowRight, Camera, ScanSearch, Sparkles, Star, TrendingDown, Zap } from 'lucide-react'
+import { ArrowRight, Camera, ScanSearch, Search, Sparkles, TrendingDown, Zap } from 'lucide-react'
+
+const STATS = [
+  { value: 'Google Lens', label: 'Visual search engine' },
+  { value: 'SerpApi', label: 'Live product data' },
+  { value: 'OWL-ViT', label: 'AI recognition model' },
+  { value: '< 3s', label: 'Average search time' },
+]
 
 const PIPELINE = [
-  { icon: Camera, label: 'Upload photo', detail: 'JPG, PNG or WEBP' },
-  { icon: Sparkles, label: 'AI identifies', detail: 'Product, brand, attributes' },
-  { icon: ScanSearch, label: 'Compare products', detail: 'Live SerpApi shopping data' },
-  { icon: TrendingDown, label: 'Find best deal', detail: 'Lowest price & best value' },
+  { icon: Camera,      label: 'Upload photo',      detail: 'JPG · PNG · WEBP', color: 'from-brand-500 to-brand-400' },
+  { icon: Sparkles,    label: 'AI identifies',      detail: 'OWL-ViT vision model', color: 'from-brand-400 to-accent-500' },
+  { icon: ScanSearch,  label: 'Google Lens scan',   detail: 'Pixel-perfect match', color: 'from-accent-500 to-accent-400' },
+  { icon: TrendingDown,label: 'Best deal found',    detail: 'Live merchant prices', color: 'from-accent-400 to-deal-500' },
 ]
 
 export function Hero() {
@@ -12,139 +19,117 @@ export function Hero() {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   return (
-    <section className="hero-grid relative overflow-hidden pt-14 pb-16 sm:pt-20 sm:pb-24" aria-labelledby="hero-heading">
+    <section
+      className="hero-grid relative overflow-hidden pt-12 pb-16 sm:pt-20 sm:pb-24"
+      aria-labelledby="hero-heading"
+    >
+      {/* Ambient blobs */}
       <div className="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-        <div className="bg-brand-200/40 absolute -top-32 -left-24 h-96 w-96 animate-[var(--animate-drift)] rounded-full blur-3xl" />
+        <div className="absolute -top-40 -left-32 h-[520px] w-[520px] animate-[var(--animate-drift)] rounded-full bg-brand-500/10 blur-[100px]" />
         <div
-          className="bg-accent-400/25 absolute -top-16 right-0 h-80 w-80 animate-[var(--animate-drift)] rounded-full blur-3xl"
-          style={{ animationDelay: '-8s' }}
+          className="absolute -top-20 right-0 h-[420px] w-[420px] animate-[var(--animate-drift)] rounded-full bg-accent-400/15 blur-[90px]"
+          style={{ animationDelay: '-9s' }}
         />
-        <div className="to-ink-50/70 absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-white/90" />
       </div>
 
-      <div className="container-page grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="animate-[var(--animate-fade-up)]">
-          <p className="border-ink-200 text-ink-600 inline-flex items-center gap-2 rounded-full border bg-white/80 px-3.5 py-1.5 text-xs font-medium shadow-[var(--shadow-soft)] transition-transform duration-300 hover:scale-[1.03]">
-            <span className="bg-deal-500 h-1.5 w-1.5 animate-pulse rounded-full" aria-hidden="true" />
-            <Zap className="text-brand-600 h-3.5 w-3.5" aria-hidden="true" />
-            Live shopping intelligence via SerpApi
+      <div className="container-page">
+        {/* Top announcement pill */}
+        <div className="flex justify-center animate-[var(--animate-fade-in)]">
+          <p className="inline-flex items-center gap-2 rounded-full border border-brand-200/80 bg-white/90 px-4 py-1.5 text-xs font-semibold text-brand-700 shadow-[var(--shadow-soft)] backdrop-blur-sm transition-transform duration-300 hover:scale-[1.04]">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-deal-500" aria-hidden="true" />
+            <Zap className="h-3.5 w-3.5 text-brand-500" aria-hidden="true" />
+            Powered by SerpApi · Hackathon Edition 2026
           </p>
+        </div>
 
+        {/* Main headline */}
+        <div className="mt-8 max-w-4xl mx-auto text-center animate-[var(--animate-fade-up)]">
           <h1
             id="hero-heading"
-            className="mt-5 text-4xl leading-[1.08] font-bold tracking-tight sm:text-5xl lg:text-6xl"
+            className="text-5xl font-black leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl"
           >
-            See it. <span className="gradient-text">Search it.</span>
-            <br />Buy with confidence.
+            See it.{' '}
+            <span className="gradient-text">Search it.</span>
+            <br />
+            Buy with confidence.
           </h1>
-
-          <p className="text-ink-600 mt-5 max-w-xl text-base leading-relaxed sm:text-lg">
-            Turn any product photo into a clear shopping decision. Find live offers, compare
-            sellers, and surface the best value without the tab overload.
+          <p className="text-ink-600 mt-6 max-w-2xl mx-auto text-base leading-relaxed sm:text-lg">
+            Upload any product photo and ShopLens finds visually identical matches with live prices
+            from top merchants — powered by Google Lens and SerpApi.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <button type="button" onClick={() => scrollTo('upload')} className="btn-primary btn-lg">
-              <Camera className="h-4.5 w-4.5" aria-hidden="true" />
+          {/* CTA buttons */}
+          <div className="mt-10 flex flex-wrap justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('search-image-tab')
+                if (el) el.click()
+                scrollTo('upload')
+              }}
+              className="btn-primary btn-lg group"
+            >
+              <Camera className="h-5 w-5" aria-hidden="true" />
               Start with a photo
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
             </button>
             <button
               type="button"
-              onClick={() => scrollTo('how-it-works')}
+              onClick={() => {
+                const el = document.getElementById('search-text-tab')
+                if (el) el.click()
+                scrollTo('upload')
+              }}
               className="btn-secondary btn-lg"
             >
-              Explore the workflow
+              <Search className="h-4.5 w-4.5" aria-hidden="true" />
+              Search by Name
             </button>
           </div>
-
-          <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6">
-            <div className="transition-transform duration-300 hover:-translate-y-1">
-              <dt className="text-ink-400 text-xs font-medium">Search engine</dt>
-              <dd className="text-ink-900 mt-1 text-sm font-semibold">SerpApi Google Shopping</dd>
-            </div>
-            <div className="transition-transform duration-300 hover:-translate-y-1">
-              <dt className="text-ink-400 text-xs font-medium">Recognition</dt>
-              <dd className="text-ink-900 mt-1 text-sm font-semibold">AI vision model</dd>
-            </div>
-            <div className="transition-transform duration-300 hover:-translate-y-1">
-              <dt className="text-ink-400 text-xs font-medium">Market</dt>
-              <dd className="text-ink-900 mt-1 text-sm font-semibold">India (₹ INR)</dd>
-            </div>
-          </dl>
         </div>
 
-        <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-          <div className="border-white/80 animate-[var(--animate-float)] relative z-10 overflow-hidden rounded-[1.75rem] border bg-white/85 p-5 shadow-[0_24px_80px_-30px_rgb(49_46_129_/_0.42)] backdrop-blur-xl sm:p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="label">SnapBuy intelligence</p>
-                <p className="text-ink-500 mt-1 text-xs">Photo to live price comparison</p>
-              </div>
-              <span className="bg-deal-50 text-deal-700 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold"><span className="bg-deal-500 h-1.5 w-1.5 rounded-full" /> LIVE</span>
+        {/* Stats row */}
+        <dl className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-4 max-w-3xl mx-auto">
+          {STATS.map((stat, i) => (
+            <div
+              key={stat.label}
+              className="card text-center py-4 px-3 animate-[var(--animate-fade-up)]"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <dt className="label">{stat.label}</dt>
+              <dd className="mt-1.5 text-lg font-bold text-ink-900 leading-tight">{stat.value}</dd>
             </div>
+          ))}
+        </dl>
 
-            <ol className="mt-5 space-y-3">
-              {PIPELINE.map((step, index) => (
-                <li key={step.label} className="group/step relative">
-                  <div className="border-ink-100 from-ink-50/60 flex items-center gap-3 rounded-2xl border bg-gradient-to-r to-white p-3.5 transition-all duration-300 group-hover/step:-translate-y-0.5 group-hover/step:border-brand-200 group-hover/step:shadow-[var(--shadow-soft)]">
-                    <span className="from-brand-600 to-accent-600 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white transition-transform duration-300 group-hover/step:scale-110 group-hover/step:rotate-[-6deg]">
-                      <step.icon className="h-4.5 w-4.5" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-ink-900 text-sm font-semibold">{step.label}</p>
-                      <p className="text-ink-500 truncate text-xs">{step.detail}</p>
-                    </div>
-                    <span className="text-ink-300 ml-auto text-xs font-semibold transition-colors duration-300 group-hover/step:text-brand-500">
-                      0{index + 1}
-                    </span>
-                  </div>
-                  {index < PIPELINE.length - 1 && (
-                    <span
-                      className="bg-ink-200 absolute -bottom-1.5 left-8 h-3 w-px"
-                      aria-hidden="true"
-                    />
-                  )}
-                </li>
-              ))}
-            </ol>
-
-            <div className="from-ink-950 via-ink-900 to-brand-950 mt-5 rounded-2xl bg-gradient-to-br p-4 text-white">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-brand-200 text-[10px] font-bold tracking-[0.14em] uppercase">Recognised product</p>
-                  <p className="mt-2 text-lg font-bold">Nike Air Max 270</p>
-                  <p className="mt-1 text-sm text-slate-300">Black running shoes</p>
-                </div>
-                <div className="border-white/10 bg-white/10 rounded-xl border px-2.5 py-2 text-right">
-                  <p className="text-[10px] text-slate-300">Confidence</p>
-                  <p className="text-sm font-bold">92%</p>
-                </div>
+        {/* Pipeline strip */}
+        <div className="mt-16 mx-auto max-w-4xl">
+          <div className="relative flex flex-col sm:flex-row items-stretch gap-3 sm:gap-0">
+            {/* Connector line (desktop) */}
+            <div
+              className="pointer-events-none absolute top-1/2 left-0 right-0 hidden sm:block h-px -translate-y-1/2"
+              style={{
+                background: 'linear-gradient(90deg, var(--color-brand-300), var(--color-accent-400), var(--color-deal-500))',
+              }}
+              aria-hidden="true"
+            />
+            {PIPELINE.map((step, i) => (
+              <div
+                key={step.label}
+                className="relative z-10 flex flex-1 flex-col items-center text-center animate-[var(--animate-bounce-in)]"
+                style={{ animationDelay: `${i * 90 + 300}ms` }}
+              >
+                <span
+                  className={`flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-br ${step.color} text-white shadow-[var(--shadow-glow)] transition-transform duration-300 hover:scale-110`}
+                >
+                  <step.icon className="h-6 w-6" aria-hidden="true" />
+                </span>
+                <p className="mt-3 text-sm font-semibold text-ink-900">{step.label}</p>
+                <p className="mt-0.5 text-xs text-ink-500">{step.detail}</p>
               </div>
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10"><div className="from-deal-400 to-brand-400 h-full w-[92%] rounded-full bg-gradient-to-r" /></div>
-            </div>
-
-            <div className="border-ink-100 mt-5 flex items-center justify-between border-t pt-4">
-              <div>
-                <p className="text-ink-400 text-xs">Best price found</p>
-                <p className="text-ink-900 font-mono text-xl font-bold">₹8,499</p>
-              </div>
-              <div className="text-right">
-                <p className="text-ink-400 text-xs">You save</p>
-                <p className="text-deal-600 font-mono text-xl font-bold">₹1,500</p>
-              </div>
-            </div>
-
-            <p className="text-ink-400 mt-3 flex items-center gap-1.5 text-[11px]">
-              <Star className="h-3 w-3 fill-amber-400 text-amber-400" aria-hidden="true" />
-              Illustrative example of the results view — real searches show live data.
-            </p>
+            ))}
           </div>
-
-          <div
-            className="from-brand-500 to-accent-500 absolute -inset-4 -z-0 rounded-4xl bg-gradient-to-br opacity-10 blur-2xl transition-opacity duration-500"
-            aria-hidden="true"
-          />
         </div>
       </div>
     </section>

@@ -73,12 +73,17 @@ class Settings(BaseSettings):
     vision_model: str = ""
     vision_base_url: str = ""
     vision_timeout_seconds: float = 45.0
-    local_vision_model: str = "openai/clip-vit-base-patch32"
+    # OWL-ViT is open-vocabulary object detection.  Unlike the former
+    # whole-image CLIP classifier, it gives a label and a bounding-box score
+    # for product prompts (for example, ankle boot vs. sneaker).
+    local_vision_model: str = "google/owlvit-base-patch32"
     # Optional directory created by the model-download command in the README.
     # When set, no Hugging Face network request is made for local CLIP.
     local_vision_model_dir: Path | None = None
     local_vision_load_attempts: int = 2
     local_vision_retry_seconds: float = 60.0
+    image_embedding_model: str = "openai/clip-vit-base-patch32"
+    visual_rerank_max_images: int = 12
 
     # ------------------------------------------------------------- behaviour
     demo_mode: DemoMode = "auto"

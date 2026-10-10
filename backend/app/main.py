@@ -41,6 +41,8 @@ async def lifespan(app: FastAPI):
         settings.serpapi_location,
     )
     if settings.resolved_vision_provider == "local":
+        # Kept as a non-downloading diagnostic; OWL-ViT itself lazy-loads on
+        # the first image request.
         local_vision_service.startup_diagnostics()
     if settings.demo_active("search") or settings.demo_active("vision"):
         logger.warning(

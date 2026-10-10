@@ -40,7 +40,7 @@ import truststore
 from app.config import settings
 from app.data.demo_data import DEMO_VISION_RESULT
 from app.models.search import VisionAttributes
-from app.services import local_vision_service
+from app.services import local_vision_service, owlvit_service
 from app.utils.errors import (
     NoProductDetectedError,
     VisionNotConfiguredError,
@@ -227,7 +227,7 @@ class LocalVisionProvider:
     name = "local-clip"
 
     async def analyse(self, image: PreparedImage) -> VisionAttributes:
-        return await local_vision_service.analyse_image(image)
+        return await owlvit_service.analyse_image(image)
 
 
 class _HttpVisionProvider:

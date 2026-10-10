@@ -20,6 +20,8 @@ export function makeProduct(overrides: Partial<Product> = {}): Product {
     delivery: null,
     extensions: [],
     value_score: 80,
+    visual_similarity_score: null,
+    ranking_score: null,
     is_demo: false,
     ...overrides,
   }
@@ -86,6 +88,7 @@ export function makeAnalysis(overrides: Partial<VisionAttributes> = {}): VisionA
     provider: 'demo',
     is_demo: false,
     notes: [],
+    detection_debug: [],
     ...overrides,
   }
 }

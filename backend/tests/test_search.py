@@ -451,3 +451,208 @@ async def test_normalisation_of_a_realistic_payload_shape():
     products = normalize_serpapi_payload(payload)
     assert products[0].extensions == ["Free delivery", "10 day returns"]
     assert products[0].source == "Myntra"
+
+
+# =========================================================================== #
+# Dedicated Verification Tests: 10 Core Discovery Requirements
+# =========================================================================== #
+
+
+def test_req1_text_search_without_an_image(client):
+    """1. Text search without an image works independently."""
+    response = client.post("/api/search", json={"query": "iPhone 17"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["query"] == "iPhone 17"
+    assert payload["search_mode"] == "text"
+    assert "products" in payload
+
+
+def test_req2_image_search_with_a_valid_image(client):
+    """2. Image search with a valid image uploads photo and returns image search mode."""
+    from tests.conftest import _image_bytes
+
+    data = _image_bytes()
+    response = client.post(
+        "/api/search-with-image",
+        data={"query": "Nike sneaker"},
+        files={"file": ("sneaker.jpg", data, "image/jpeg")},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["search_mode"] == "image"
+    assert "products" in payload
+
+
+def test_req3_empty_or_invalid_text_query(client):
+    """3. An empty or invalid text query is rejected with 422."""
+    assert client.post("/api/search", json={"query": ""}).status_code == 422
+    assert client.post("/api/search", json={"query": "    "}).status_code == 422
+    assert client.post("/api/search", json={}).status_code == 422
+
+
+def test_req4_failed_image_recognition_result(client, monkeypatch):
+    """4. A failed image-recognition result returns a controlled error and never crashes."""
+    from app.services import vision_service
+    from app.utils.errors import NoProductDetectedError
+    from tests.conftest import _image_bytes
+
+    async def fail_analyse(*_args, **_kwargs):
+        raise NoProductDetectedError()
+
+    monkeypatch.setattr(vision_service, "analyse_image", fail_analyse)
+    data = _image_bytes()
+    response = client.post(
+        "/api/analyze-image",
+        files={"file": ("unclear.jpg", data, "image/jpeg")},
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "no_product_detected"
+
+
+def test_req5_serpapi_error_handling(client, live_search, monkeypatch):
+    """5. SerpApi errors (timeout, rate limit, auth) return clean errors without secrets."""
+    from app.services import serpapi_service
+
+    async def timeout_request(*_args, **_kwargs):
+        raise SearchTimeoutError()
+
+    monkeypatch.setattr(serpapi_service, "search_google_shopping", timeout_request)
+    response = client.post("/api/search", json={"query": "laptop"})
+    assert response.status_code == 504
+    assert response.json()["error"]["code"] == "search_timeout"
+
+
+def test_req6_switching_from_image_search_to_text_search(client):
+    """6. Switching from image search to text search keeps flows and modes isolated."""
+    from tests.conftest import _image_bytes
+
+    # First: perform an image search
+    data = _image_bytes()
+    img_resp = client.post(
+        "/api/search-with-image",
+        data={"query": "running shoes"},
+        files={"file": ("shoes.jpg", data, "image/jpeg")},
+    )
+    assert img_resp.status_code == 200
+    assert img_resp.json()["search_mode"] == "image"
+
+    # Next: switch to text search
+    txt_resp = client.post("/api/search", json={"query": "Samsung Galaxy S25"})
+    assert txt_resp.status_code == 200
+    assert txt_resp.json()["search_mode"] == "text"
+    assert txt_resp.json()["query"] == "Samsung Galaxy S25"
+
+
+def test_req7_searching_for_iphone17_after_sneaker_search(client, live_search, monkeypatch):
+    """7. Searching for iPhone 17 after a previous sneaker search returns iPhone 17 results."""
+    from tests.conftest import _image_bytes
+
+    class FakeResponse:
+        def __init__(self, items):
+            self.status_code = 200
+            self.text = "{}"
+            self._items = items
+
+        def json(self):
+            return {"shopping_results": self._items}
+
+    async def fake_get(_client, _url, params=None, **_kwargs):
+        q = (params or {}).get("q", "").lower()
+        if "iphone" in q:
+            return FakeResponse([
+                {
+                    "title": "Apple iPhone 17 Pro Max 256GB",
+                    "extracted_price": 139900,
+                    "source": "Apple Store",
+                    "link": "https://apple.com",
+                }
+            ])
+        return FakeResponse([
+            {
+                "title": "Nike Air Max 270 Black Sneakers",
+                "extracted_price": 8499,
+                "source": "Myntra",
+                "link": "https://myntra.com",
+            }
+        ])
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", fake_get)
+    clear_cache()
+
+    sneaker_data = _image_bytes()
+    img_res = client.post(
+        "/api/search-with-image",
+        data={"query": "black running sneakers"},
+        files={"file": ("sneaker.jpg", sneaker_data, "image/jpeg")},
+    )
+    assert img_res.status_code == 200
+    assert img_res.json()["query"] == "black running sneakers"
+    assert "sneaker" in img_res.json()["products"][0]["title"].lower()
+
+    txt_res = client.post("/api/search", json={"query": "iPhone 17"}).json()
+    assert txt_res["query"] == "iPhone 17"
+    assert txt_res["search_mode"] == "text"
+    assert "iPhone 17" in txt_res["products"][0]["title"]
+    assert "sneaker" not in txt_res["products"][0]["title"].lower()
+
+
+def test_req8_rapidly_submitting_two_different_search_queries(client):
+    """8. Rapidly submitting two different search queries isolates each response."""
+    res1 = client.post("/api/search", json={"query": "Sony WH-1000XM5 headphones"}).json()
+    res2 = client.post("/api/search", json={"query": "Apple iPad Air"}).json()
+    assert res1["query"] == "Sony WH-1000XM5 headphones"
+    assert res2["query"] == "Apple iPad Air"
+    assert res1["search_mode"] == "text"
+    assert res2["search_mode"] == "text"
+
+
+def test_req9_missing_prices_thumbnails_ratings_and_seller_names():
+    """9. Missing prices, thumbnails, ratings, and seller names are handled without crashing."""
+    payload = {
+        "shopping_results": [
+            {
+                "title": "Mystery Product with no metadata",
+                "price": None,
+                "thumbnail": None,
+                "rating": None,
+                "source": None,
+            }
+        ]
+    }
+    products = normalize_serpapi_payload(payload)
+    assert len(products) == 1
+    assert products[0].title == "Mystery Product with no metadata"
+    assert products[0].price is None
+    assert products[0].thumbnail is None
+    assert products[0].rating is None
+
+    summary = product_service.summarize(products)
+    assert summary.count == 1
+    assert summary.priced_count == 0
+    assert summary.lowest_price is None
+
+
+def test_req10_price_calculations_and_sorting():
+    """10. Price calculations correctly compute stats and sellers are sorted low-to-high."""
+    prods = [
+        Product(id="1", title="Item 1", price=100.0, source="Store A", position=1),
+        Product(id="2", title="Item 2", price=200.0, source="Store B", position=2),
+        Product(id="3", title="Item 3", price=300.0, source="Store C", position=3),
+    ]
+    summary = product_service.summarize(prods)
+    assert summary.lowest_price == 100.0
+    assert summary.highest_price == 300.0
+    assert summary.average_price == 200.0
+    assert summary.potential_saving == 200.0
+
+    sellers = product_service.build_sellers(prods)
+    assert len(sellers) == 3
+    assert sellers[0].source == "Store A"
+    assert sellers[0].price == 100.0
+    assert sellers[0].is_lowest is True
+    assert sellers[1].price == 200.0
+    assert sellers[1].delta_from_lowest == 100.0
+    assert sellers[2].price == 300.0
+    assert sellers[2].delta_from_lowest == 200.0
+

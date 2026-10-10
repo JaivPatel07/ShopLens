@@ -5,6 +5,11 @@ from __future__ import annotations
 from pydantic import BaseModel, Field, field_validator
 
 
+class DetectionDebug(BaseModel):
+    label: str
+    score: float = Field(ge=0, le=1)
+
+
 class VisionAttributes(BaseModel):
     """Structured product information extracted from a photo."""
 
@@ -19,6 +24,8 @@ class VisionAttributes(BaseModel):
     provider: str = "demo"
     is_demo: bool = False
     notes: list[str] = Field(default_factory=list)
+    # Safe, non-secret diagnostics for support and UI debugging.
+    detection_debug: list[DetectionDebug] = Field(default_factory=list)
 
 
 class SearchRequest(BaseModel):

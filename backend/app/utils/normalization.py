@@ -389,17 +389,31 @@ def normalize_visual_matches(
     seen: set[str] = set()
 
     raw_items = payload.get("visual_matches")
+    if not isinstance(raw_items, list) or not raw_items:
+        raw_items = payload.get("products")
+    if not isinstance(raw_items, list) or not raw_items:
+        rev = payload.get("reverse_image_search")
+        if isinstance(rev, dict):
+            raw_items = rev.get("organic_results")
     if not isinstance(raw_items, list):
         return []
 
     for index, raw in enumerate(raw_items):
         if not isinstance(raw, dict):
             continue
-        title = clean_text(raw.get("title"), limit=200)
+        title = clean_text(raw.get("title") or raw.get("name"), limit=200)
         if not title:
             continue
         link = clean_text(_first(raw, _LINK_KEYS), limit=500)
-        price, currency, price_display = _lens_price(raw.get("price"), default_currency)
+        if not link:
+            link = google_shopping_fallback_url(title)
+
+        source = clean_text(
+            raw.get("source") or raw.get("merchant") or raw.get("seller") or raw.get("domain"),
+            limit=80,
+        )
+        price_raw = raw.get("price") if raw.get("price") is not None else raw.get("extracted_price")
+        price, currency, price_display = _lens_price(price_raw, default_currency)
         thumbnail = clean_text(_first(raw, _THUMBNAIL_KEYS), limit=500)
 
         key = f"{title.lower()}|{(link or '')}"
@@ -411,14 +425,14 @@ def normalize_visual_matches(
             VisualMatch(
                 id=f"lens-{index + 1}-{slug(title)}",
                 title=title,
-                source=clean_text(raw.get("source"), limit=80),
+                source=source,
                 link=link,
                 thumbnail=thumbnail,
                 price=price,
                 currency=currency,
                 price_formatted=price_display or format_price(price, currency),
                 rating=parse_float(raw.get("rating"), minimum=0, maximum=5),
-                reviews=parse_int(raw.get("reviews")),
+                reviews=parse_int(raw.get("reviews") if raw.get("reviews") is not None else raw.get("review_count")),
                 in_stock=raw.get("in_stock") if isinstance(raw.get("in_stock"), bool) else None,
                 is_demo=is_demo,
             )

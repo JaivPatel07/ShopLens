@@ -9,7 +9,7 @@ python-dotenv==1.0.1
 python-multipart==0.0.20
 pillow==12.0.0
 transformers==4.49.0
-# Required by the local CLIP classifier.  A CPU build is sufficient; no CUDA
+# Required by OWL-ViT detection and optional CLIP reranking. A CPU build is sufficient; no CUDA
 # runtime is needed for the default configuration.
 torch>=2.2,<3.0
 

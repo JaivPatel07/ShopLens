@@ -35,7 +35,15 @@ class Product(BaseModel):
     #: Transparent recommendation score in the 0-100 range (``None`` when there
     #: is not enough data to compute one).
     value_score: float | None = None
+    #: CLIP cosine similarity in [-1, 1] range; ``None`` when not computed.
+    visual_similarity_score: float | None = None
+    #: Combined ranking score (similarity 80% + position 20%); used for sort order.
+    ranking_score: float | None = None
+    #: Human-readable match provenance shown in the UI.
+    #: ``None`` = standard text search; ``"Visually Similar"`` = CLIP reranked.
+    match_label: str | None = None
     is_demo: bool = False
+
 
 
 class VisualMatch(BaseModel):
@@ -95,6 +103,8 @@ class SellerOffer(BaseModel):
     is_lowest: bool = False
     delta_from_lowest: float | None = None
     delta_from_lowest_formatted: str | None = None
+    variant: str | None = None
+    condition: str | None = None
 
 
 RecommendationReason = Literal[
@@ -122,6 +132,7 @@ class Recommendation(BaseModel):
 class SearchResponse(BaseModel):
     query: str
     engine: str = "google_shopping"
+    search_mode: str = "text"
     products: list[Product] = Field(default_factory=list)
     summary: PriceSummary = Field(default_factory=PriceSummary)
     sellers: list[SellerOffer] = Field(default_factory=list)

@@ -18,6 +18,8 @@ export interface Product {
   delivery: string | null
   extensions: string[]
   value_score: number | null
+  visual_similarity_score: number | null
+  ranking_score: number | null
   is_demo: boolean
 }
 
@@ -39,6 +41,8 @@ export interface PriceSummary {
   rated_count: number
 }
 
+export type SearchMode = 'text' | 'image'
+
 export interface SellerOffer {
   source: string
   price: number
@@ -51,6 +55,8 @@ export interface SellerOffer {
   is_lowest: boolean
   delta_from_lowest: number | null
   delta_from_lowest_formatted: string | null
+  variant?: string | null
+  condition?: string | null
 }
 
 export type RecommendationReason =
@@ -74,6 +80,7 @@ export interface Recommendation {
 export interface SearchResponse {
   query: string
   engine: string
+  search_mode?: string
   products: Product[]
   summary: PriceSummary
   sellers: SellerOffer[]
@@ -120,6 +127,7 @@ export interface VisionAttributes {
   provider: string
   is_demo: boolean
   notes: string[]
+  detection_debug: { label: string; score: number }[]
 }
 
 export interface AppConfig {

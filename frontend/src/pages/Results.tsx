@@ -1,6 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, Filter as FilterIcon, Info, RefreshCw, Search } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Camera,
+  Filter as FilterIcon,
+  Info,
+  RefreshCw,
+  Search,
+} from 'lucide-react'
 import { useProductFlow } from '../context/productFlow'
 import { FilterBar } from '../components/FilterBar'
 import { ProductGrid } from '../components/ProductGrid'
@@ -14,7 +22,7 @@ import { ImagePreview } from '../components/ImagePreview'
 import { LoadingState } from '../components/LoadingState'
 import { ErrorState } from '../components/ErrorState'
 import { DemoBadge } from '../components/DemoBadge'
-import type { FilterState } from '../types/product'
+import type { FilterState, SearchResponse } from '../types/product'
 import {
   DEFAULT_FILTERS,
   applyFilters,
@@ -26,6 +34,8 @@ import { cx, formatPrice } from '../lib/format'
 import { createThumbnailDataUrl } from '../lib/image'
 import { useSearchHistory } from '../hooks/useSearchHistory'
 
+const PAGE_SIZE = 12
+
 export default function Results() {
   const flow = useProductFlow()
   const navigate = useNavigate()
@@ -33,6 +43,16 @@ export default function Results() {
 
   const search = flow.search
   const products = useMemo(() => search?.products ?? [], [search])
+
+  const [inputQuery, setInputQuery] = useState(search?.query ?? flow.searchQuery ?? '')
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+
+  useEffect(() => {
+    if (search?.query) {
+      setInputQuery(search.query)
+      setVisibleCount(PAGE_SIZE)
+    }
+  }, [search?.query])
 
   const [filterState, setFilterState] = useState<{ forQuery: string; filters: FilterState }>({
     forQuery: '',
@@ -47,33 +67,66 @@ export default function Results() {
     [products, filters, search?.best_deal?.product?.id],
   )
 
-  const availableSellers = useMemo(() => deriveSellers(products), [products])
-
-  const priceBounds = useMemo(() => derivePriceBounds(products), [products])
-
-  const ratingBounds = useMemo(() => highestRating(products), [products])
-
-  const refinements = useMemo(
-    () => buildRefinements(search?.query ?? '', flow.analysis?.attributes ?? []),
-    [search?.query, flow.analysis?.attributes],
+  const displayedProducts = useMemo(
+    () => filtered.slice(0, visibleCount),
+    [filtered, visibleCount],
   )
 
-  const handleSearch = (query: string) => {
-    void flow.runSearch(query).then(async (response) => {
-      if (!response) return
-      let thumbnail: string | null = null
-      if (flow.imageFile) thumbnail = await createThumbnailDataUrl(flow.imageFile, 128)
-      addEntry({
-        productName: flow.analysis?.product_name ?? response.query,
-        query: response.query,
-        lowestPrice: response.summary.lowest_price,
-        lowestPriceFormatted: response.summary.lowest_price_formatted ?? null,
-        sellerCount: response.summary.seller_count,
-        productCount: response.summary.count,
-        thumbnail,
-        isDemo: response.is_demo,
-      })
+  const availableSellers = useMemo(() => deriveSellers(products), [products])
+  const priceBounds = useMemo(() => derivePriceBounds(products), [products])
+  const ratingBounds = useMemo(() => highestRating(products), [products])
+
+  const isImageMode = flow.searchMode === 'image' || (flow.mode === 'image' && Boolean(flow.imageFile))
+
+  const refinements = useMemo(
+    () =>
+      buildRefinements(
+        search?.query ?? '',
+        isImageMode ? (flow.analysis?.attributes ?? []) : [],
+      ),
+    [search?.query, isImageMode, flow.analysis?.attributes],
+  )
+
+  const recordHistory = async (response: SearchResponse) => {
+    let thumbnail: string | null = null
+    if (isImageMode && flow.imageFile) {
+      thumbnail = await createThumbnailDataUrl(flow.imageFile, 128)
+    }
+    addEntry({
+      productName: isImageMode && flow.analysis?.product_name ? flow.analysis.product_name : response.query,
+      query: response.query,
+      lowestPrice: response.summary.lowest_price,
+      lowestPriceFormatted: response.summary.lowest_price_formatted ?? null,
+      sellerCount: response.summary.seller_count,
+      productCount: response.summary.count,
+      thumbnail,
+      isDemo: response.is_demo,
     })
+  }
+
+  const handleSearch = (query: string) => {
+    const cleaned = query.trim()
+    if (!cleaned) return
+    flow.setQuery(cleaned)
+    if (isImageMode && flow.imageFile) {
+      void flow.runImageSearch(cleaned).then((res) => {
+        if (res) void recordHistory(res)
+      })
+    } else {
+      void flow.runTextSearch(cleaned).then((res) => {
+        if (res) void recordHistory(res)
+      })
+    }
+  }
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    handleSearch(inputQuery)
+  }
+
+  const handleNewSearch = () => {
+    flow.reset()
+    navigate('/')
   }
 
   if (!search && !flow.isSearching) {
@@ -85,57 +138,79 @@ export default function Results() {
           </span>
           <h1 className="mt-5 text-2xl font-bold">No results to show yet</h1>
           <p className="text-ink-600 mt-3 text-sm leading-relaxed">
-            Upload a product photo first — SnapBuy will identify it and run the price comparison for
-            you.
+            Search for any product name or upload a product photo to find live prices and comparable offers.
           </p>
-          <Link to="/#upload" className="btn-primary btn-lg mt-6">
-            Upload a product photo
-          </Link>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link to="/" onClick={() => flow.reset()} className="btn-primary btn-lg inline-flex items-center gap-2">
+              <Camera className="h-4 w-4" aria-hidden="true" />
+              Upload a product photo or search by text
+            </Link>
+            <button type="button" onClick={handleNewSearch} className="btn-secondary btn-lg">
+              Start a new search
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
+  const pageTitle =
+    isImageMode && flow.analysis?.product_name
+      ? flow.analysis.product_name
+      : (search?.query || flow.searchQuery || 'Product Results')
+
   return (
     <div className="pb-24">
-      <header className="border-ink-100 bg-ink-50/40 border-b py-10">
+      <header className="border-ink-100 bg-ink-50/40 border-b py-8">
         <div className="container-page">
-          <Link
-            to="/"
-            className="text-ink-500 hover:text-ink-900 mb-6 inline-flex items-center gap-2 text-sm font-medium transition"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            New search
-          </Link>
+          <div className="flex items-center justify-between gap-4 mb-5">
+            <button
+              type="button"
+              onClick={handleNewSearch}
+              className="text-ink-500 hover:text-ink-900 inline-flex items-center gap-2 text-sm font-medium transition cursor-pointer"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              New search
+            </button>
 
-          <div className="grid gap-6 lg:grid-cols-[160px_minmax(0,1fr)] lg:items-start">
-            {flow.imagePreview && (
+            {/* Explicit search mode indicator */}
+            <div className="flex items-center gap-2">
+              {isImageMode ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-700 shadow-xs">
+                  <Camera className="h-3.5 w-3.5" aria-hidden="true" />
+                  Search by Image (Google Lens)
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 shadow-xs">
+                  <Search className="h-3.5 w-3.5" aria-hidden="true" />
+                  Search by Text (Google Shopping)
+                </span>
+              )}
+              {search?.is_demo && <DemoBadge />}
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-start">
+            {/* Show image thumbnail strictly when in image search mode */}
+            {isImageMode && flow.imagePreview && (
               <ImagePreview
                 src={flow.imagePreview}
                 fileName={flow.imageFile?.name}
-                onRemove={() => {
-                  flow.reset()
-                  navigate('/#upload')
-                }}
+                onRemove={handleNewSearch}
                 compact
-                className="max-w-[160px]"
+                className="max-w-[140px] sm:max-w-[160px]"
               />
             )}
 
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="label">Results for</p>
-                {search?.is_demo && <DemoBadge />}
-              </div>
-
-              <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-                {flow.analysis?.product_name ?? search?.query ?? 'Your search'}
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl text-ink-900">
+                {pageTitle}
               </h1>
 
               <div className="text-ink-600 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                 <span>
                   {flow.isSearching
-                    ? 'Searching…'
+                    ? 'Searching live offers…'
                     : flow.searchStatus === 'error'
                       ? 'The search did not complete'
                       : (
@@ -148,7 +223,7 @@ export default function Results() {
                       )}
                 </span>
                 {search?.summary.seller_count ? (
-                  <span>· {search.summary.seller_count} sellers</span>
+                  <span>· Across {search.summary.seller_count} sellers</span>
                 ) : null}
                 {search?.elapsed_ms !== null && search?.elapsed_ms !== undefined && (
                   <span className="text-ink-400">· {(search.elapsed_ms / 1000).toFixed(1)}s</span>
@@ -158,28 +233,34 @@ export default function Results() {
                 )}
               </div>
 
-              {flow.analysis && (
-                <p className="text-ink-500 mt-3 text-sm">
+              {isImageMode && flow.analysis && (
+                <p className="text-ink-500 mt-2 text-sm">
                   {[flow.analysis.brand, flow.analysis.category].filter(Boolean).join(' · ')}
                   {flow.analysis.description ? ` — ${flow.analysis.description}` : ''}
                 </p>
               )}
 
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <p className="text-ink-500 text-xs">
-                  Query:{' '}
-                  <span className="text-ink-800 font-medium">{search?.query ?? flow.searchQuery}</span>
-                </p>
+              {/* Editable search query bar directly on results page */}
+              <form onSubmit={handleFormSubmit} className="mt-4 flex max-w-xl items-center gap-2">
+                <div className="relative min-w-0 flex-1">
+                  <Search className="text-ink-400 pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={inputQuery}
+                    onChange={(e) => setInputQuery(e.target.value)}
+                    placeholder="Refine search query..."
+                    className="field !py-1.5 !pl-9 !text-sm w-full"
+                  />
+                </div>
                 <button
-                  type="button"
-                  className="btn-ghost !px-2 !py-1 text-xs"
-                  onClick={() => handleSearch(search?.query ?? flow.searchQuery)}
-                  disabled={flow.isSearching}
+                  type="submit"
+                  disabled={flow.isSearching || !inputQuery.trim()}
+                  className="btn-primary !px-3.5 !py-1.5 text-xs shrink-0"
                 >
-                  <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-                  Refresh results
+                  <RefreshCw className={cx('h-3.5 w-3.5', flow.isSearching && 'animate-spin')} />
+                  Search
                 </button>
-              </div>
+              </form>
             </div>
           </div>
         </div>
@@ -191,7 +272,7 @@ export default function Results() {
             title="Something went wrong while searching"
             message={flow.searchError ?? 'Please try again in a moment.'}
             suggestions={[
-              'Check the generated search query and simplify it',
+              'Check the search query and try simplifying it',
               'Try again — search providers occasionally rate-limit requests',
             ]}
             onRetry={() => handleSearch(search?.query ?? flow.searchQuery)}
@@ -203,12 +284,15 @@ export default function Results() {
           <>
             <LoadingState
               title="Finding matching products…"
-              subtitle="SerpApi is searching Google Shopping and SnapBuy is comparing the results."
+              subtitle={
+                isImageMode
+                  ? 'Searching Google Lens & Google Shopping with your visual cues.'
+                  : 'SerpApi is searching Google Shopping for the best live deals.'
+              }
               stages={[
-                { label: 'Image uploaded', done: Boolean(flow.imageFile) },
-                { label: 'Identifying product', done: Boolean(flow.analysis) },
+                { label: 'Query prepared', done: true },
                 { label: 'Finding matching products', done: false, active: true },
-                { label: 'Comparing prices', done: false },
+                { label: 'Comparing prices across sellers', done: false },
               ]}
             />
             <ProductGrid products={[]} loading skeletonCount={8} />
@@ -272,7 +356,7 @@ export default function Results() {
                   </div>
 
                   <ProductGrid
-                    products={filtered}
+                    products={displayedProducts}
                     bestDealId={search.best_deal?.product?.id ?? null}
                     emptyAction={
                       <button
@@ -285,6 +369,19 @@ export default function Results() {
                       </button>
                     }
                   />
+
+                  {/* Load More Pagination */}
+                  {visibleCount < filtered.length && (
+                    <div className="mt-8 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                        className="btn-secondary btn-lg"
+                      >
+                        Load more products ({filtered.length - visibleCount} remaining)
+                      </button>
+                    </div>
+                  )}
                 </section>
 
                 <PriceComparison sellers={search.sellers} currency={search.summary.currency} />
@@ -318,15 +415,16 @@ export default function Results() {
                   <button
                     type="button"
                     className="btn-secondary"
-                    onClick={() => navigate('/#upload')}
+                    onClick={handleNewSearch}
                   >
-                    Try another image
+                    Start a new search
                   </button>
                 }
               />
             )}
 
-            <VisualMatches imageFile={flow.imageFile} />
+            {/* Visual matches only when searching by image */}
+            {isImageMode && <VisualMatches imageFile={flow.imageFile} />}
 
             <RefineSearch
               key={search.query}

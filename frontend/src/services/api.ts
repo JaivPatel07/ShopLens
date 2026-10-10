@@ -101,4 +101,13 @@ export const api = {
       },
       75_000,
     ),
+
+  searchWithImage: (file: File, payload: { query: string; limit?: number; force_refresh?: boolean }) => {
+    const form = new FormData()
+    form.append('file', file, file.name)
+    form.append('query', payload.query)
+    form.append('limit', String(payload.limit ?? 40))
+    form.append('force_refresh', String(payload.force_refresh ?? false))
+    return request<SearchResponse>('/search-with-image', { method: 'POST', body: form }, 90_000)
+  },
 }

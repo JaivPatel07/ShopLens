@@ -62,6 +62,10 @@ export function Navbar() {
             <Logo />
           </span>
           <span className="text-ink-900 text-lg font-bold tracking-tight">SnapBuy</span>
+          <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-semibold text-brand-700 bg-brand-50 border border-brand-200/80 px-2.5 py-0.5 rounded-full shadow-xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-deal-500 animate-pulse" />
+            SerpApi Hackathon
+          </span>
         </Link>
 
         <ul className="hidden items-center gap-1 md:flex">

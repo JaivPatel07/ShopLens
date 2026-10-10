@@ -226,7 +226,7 @@ def test_local_provider_uses_the_local_classifier(monkeypatch, prepared_image):
         assert image is prepared_image
         return expected
 
-    monkeypatch.setattr(vision_service.local_vision_service, "analyse_image", fake_analyse)
+    monkeypatch.setattr(vision_service.owlvit_service, "analyse_image", fake_analyse)
     assert asyncio.run(vision_service.LocalVisionProvider().analyse(prepared_image)) is expected
 
 
@@ -239,7 +239,7 @@ def test_local_model_failure_is_a_retryable_503_for_manual_search(client, jpeg_i
     async def unavailable(_image):
         raise LocalVisionUnavailableError(detail="connection reset while downloading model")
 
-    monkeypatch.setattr(vision_service.local_vision_service, "analyse_image", unavailable)
+    monkeypatch.setattr(vision_service.owlvit_service, "analyse_image", unavailable)
     response = client.post(
         "/api/analyze-image",
         files={"file": ("product.jpg", jpeg_image, "image/jpeg")},
@@ -413,3 +413,127 @@ def test_gemini_provider_falls_back_when_a_model_is_retired(monkeypatch, prepare
     assert len(seen_urls) == 2
     assert "gemini-2.0-flash" in seen_urls[0]
     assert "gemini-3.8-flash" in seen_urls[1]
+
+# ---------------------------------------------------------------------------
+# OWL-ViT specific: confidence=None when no type label exceeds threshold
+# ---------------------------------------------------------------------------
+
+
+def test_owlvit_returns_none_confidence_when_no_label_exceeds_threshold(monkeypatch):
+    """When OWL-ViT finds no type label above threshold, confidence must be
+    None (not 0.0). A 0.0 would render a deceptive red 0% progress bar.
+    """
+    import asyncio
+
+    import PIL.Image as PilImage
+
+    from app.services import owlvit_service
+    from app.utils.images import PreparedImage
+
+    class _FakeImage:
+        height = 100
+        width = 100
+        mode = "RGB"
+
+        def convert(self, _mode):
+            return self
+
+        def crop(self, _box):
+            return self
+
+        def resize(self, _size, _resample=None):
+            return self
+
+        def tobytes(self):
+            return b"\x80" * (100 * 100 * 3)
+
+    monkeypatch.setattr(PilImage, "open", lambda _buf: _FakeImage())
+
+    class _FakeProcessor:
+        def __call__(self, text, images, return_tensors):
+            return {}
+
+        def post_process_object_detection(self, outputs, target_sizes, threshold):
+            import torch
+            return [{"scores": torch.tensor([]), "labels": torch.tensor([], dtype=torch.long)}]
+
+    class _FakeModel:
+        def eval(self):
+            return self
+
+        def __call__(self, **_kwargs):
+            return object()
+
+    monkeypatch.setattr(owlvit_service, "_MODEL", _FakeModel())
+    monkeypatch.setattr(owlvit_service, "_PROCESSOR", _FakeProcessor())
+
+    fake_bytes = b"\xff\xd8\xff\xe0fake-jpeg"
+    prepared = PreparedImage(fake_bytes, "image/jpeg", 100, 100, len(fake_bytes))
+    result = asyncio.run(owlvit_service.analyse_image(prepared))
+
+    assert result.confidence is None, f"Expected None, got {result.confidence}"
+    assert result.detected is False
+    assert result.product_name == "Product not confidently identified"
+    assert any("Google Lens" in n or "threshold" in n for n in result.notes)
+
+
+def test_owlvit_detected_true_has_positive_confidence(monkeypatch):
+    """When a type label is detected above threshold, confidence > 0 and detected=True."""
+    import asyncio
+
+    import PIL.Image as PilImage
+
+    from app.services import owlvit_service
+    from app.utils.images import PreparedImage
+
+    class _FakeImage:
+        height = 100
+        width = 100
+        mode = "RGB"
+        size = (100, 100)
+
+        def convert(self, _mode):
+            return self
+
+        def crop(self, _box):
+            return self
+
+        def resize(self, _size, _resample=None):
+            return self
+
+        def tobytes(self):
+            return b"\x20" * (100 * 100 * 3)
+
+        def getpixel(self, _xy):
+            # Return a neutral grey so colour heuristics don't branch unexpectedly
+            return (128, 128, 128)
+
+    monkeypatch.setattr(PilImage, "open", lambda _buf: _FakeImage())
+
+    class _FakeProcessor:
+        def __call__(self, text, images, return_tensors):
+            return {}
+
+        def post_process_object_detection(self, outputs, target_sizes, threshold):
+            import torch
+            first_type = next(iter(owlvit_service.TYPE_LABELS))
+            idx = list(owlvit_service.PROMPTS).index(first_type)
+            return [{"scores": torch.tensor([0.85]), "labels": torch.tensor([idx], dtype=torch.long)}]
+
+    class _FakeModel:
+        def eval(self):
+            return self
+
+        def __call__(self, **_kwargs):
+            return object()
+
+    monkeypatch.setattr(owlvit_service, "_MODEL", _FakeModel())
+    monkeypatch.setattr(owlvit_service, "_PROCESSOR", _FakeProcessor())
+
+    fake_bytes = b"\xff\xd8\xff\xe0fake"
+    prepared = PreparedImage(fake_bytes, "image/jpeg", 100, 100, len(fake_bytes))
+    result = asyncio.run(owlvit_service.analyse_image(prepared))
+
+    assert result.detected is True
+    assert result.confidence is not None
+    assert result.confidence > 0

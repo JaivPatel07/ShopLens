@@ -8,6 +8,7 @@ data does not support one.
 from __future__ import annotations
 
 import logging
+import re
 import statistics
 import time
 
@@ -64,6 +65,42 @@ def summarize(products: list[Product], currency: str = "INR") -> PriceSummary:
     return summary
 
 
+def _extract_variant_info(product: Product) -> tuple[str | None, str | None]:
+    """Extract (variant, condition) from title or extensions."""
+    title_lower = (product.title or "").lower()
+    condition = None
+    for cond in ("refurbished", "renewed", "pre-owned", "used", "open box", "new"):
+        if cond in title_lower:
+            condition = cond.title()
+            break
+        for ext in (product.extensions or []):
+            if cond in ext.lower():
+                condition = cond.title()
+                break
+        if condition:
+            break
+
+    variant_parts: list[str] = []
+    # Storage e.g. 128GB, 256GB, 1TB
+    storage_match = re.search(r"\b(\d+\s*(?:gb|tb|mb))\b", product.title or "", re.IGNORECASE)
+    if storage_match:
+        variant_parts.append(storage_match.group(1).upper().replace(" ", ""))
+
+    # Footwear size e.g. UK 8, US 9, Size 10
+    size_match = re.search(r"\b((?:uk|us|eu|size)\s*\d+(?:\.\d+)?)\b", product.title or "", re.IGNORECASE)
+    if size_match:
+        variant_parts.append(size_match.group(1).upper())
+
+    # Extensions indicating variant
+    for ext in (product.extensions or []):
+        ext_clean = ext.strip()
+        if re.search(r"\b\d+\s*(?:gb|tb)\b", ext_clean, re.IGNORECASE) and ext_clean not in variant_parts:
+            variant_parts.append(ext_clean)
+
+    variant = " · ".join(variant_parts) if variant_parts else None
+    return variant, condition
+
+
 def build_sellers(products: list[Product], currency: str = "INR") -> list[SellerOffer]:
     """One row per merchant holding its cheapest offer, sorted low -> high."""
     cheapest: dict[str, Product] = {}
@@ -79,6 +116,7 @@ def build_sellers(products: list[Product], currency: str = "INR") -> list[Seller
 
     offers: list[SellerOffer] = []
     for source, product in cheapest.items():
+        variant, condition = _extract_variant_info(product)
         offers.append(
             SellerOffer(
                 source=source,
@@ -89,6 +127,8 @@ def build_sellers(products: list[Product], currency: str = "INR") -> list[Seller
                 link=product.link,
                 rating=product.rating,
                 reviews=product.reviews,
+                variant=variant,
+                condition=condition,
             )
         )
 
@@ -215,6 +255,7 @@ def build_search_response(
     products: list[Product],
     *,
     engine: str = "google_shopping",
+    search_mode: str = "text",
     is_demo: bool = False,
     notes: list[str] | None = None,
     elapsed_ms: int | None = None,
@@ -240,6 +281,7 @@ def build_search_response(
     return SearchResponse(
         query=query,
         engine=engine,
+        search_mode=search_mode,
         products=products,
         summary=summary,
         sellers=sellers,
@@ -256,7 +298,9 @@ def build_search_response(
 # --------------------------------------------------------------------------- #
 
 
-def demo_search_response(query: str, *, limit: int = 40, elapsed_ms: int | None = None) -> SearchResponse:
+def demo_search_response(
+    query: str, *, limit: int = 40, search_mode: str = "text", elapsed_ms: int | None = None
+) -> SearchResponse:
     """Build a response from the SerpApi-shaped demo fixture."""
     products = normalize_serpapi_payload(
         DEMO_SERPAPI_PAYLOAD, default_currency="INR", limit=limit, is_demo=True
@@ -265,6 +309,7 @@ def demo_search_response(query: str, *, limit: int = 40, elapsed_ms: int | None 
         query,
         products,
         engine="google_shopping (demo fixture)",
+        search_mode=search_mode,
         is_demo=True,
         elapsed_ms=elapsed_ms,
     )
@@ -277,6 +322,8 @@ async def search_products(
     gl: str | None = None,
     hl: str | None = None,
     force_refresh: bool = False,
+    sort_by: str | None = None,
+    search_mode: str = "text",
 ) -> SearchResponse:
     """Search for ``query`` and return a comparison-ready response.
 
@@ -289,12 +336,12 @@ async def search_products(
         if settings.demo_mode == "off" and not settings.serpapi_configured:
             raise SearchNotConfiguredError()
         response = demo_search_response(
-            query, limit=limit, elapsed_ms=int((time.perf_counter() - started) * 1000)
+            query, limit=limit, search_mode=search_mode, elapsed_ms=int((time.perf_counter() - started) * 1000)
         )
         return response
 
     result = await serpapi_service.search_google_shopping(
-        query, limit=limit, gl=gl, hl=hl, force_refresh=force_refresh
+        query, limit=limit, gl=gl, hl=hl, force_refresh=force_refresh, sort_by=sort_by
     )
     notes = list(result.notes)
     if result.cached:
@@ -304,6 +351,7 @@ async def search_products(
         query,
         result.products,
         engine=result.engine,
+        search_mode=search_mode,
         is_demo=False,
         notes=notes,
         elapsed_ms=int((time.perf_counter() - started) * 1000),

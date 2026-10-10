@@ -145,3 +145,90 @@ def test_shrink_for_upload_enforces_500kb():
     prepared = PreparedImage(raw, "image/png", 2200, 2200, len(raw))
     shrunk = shrink_for_upload(prepared)
     assert len(shrunk) <= 500 * 1024
+
+
+def test_redact_api_key_strips_credentials_from_errors(monkeypatch):
+    from app.config import settings
+    from app.services.serpapi_service import _redact_api_key
+
+    monkeypatch.setattr(settings, "serpapi_api_key", "secret-key-12345")
+    raw_error = "Error at https://serpapi.com/search?api_key=secret-key-12345&q=boots: invalid key secret-key-12345"
+    redacted = _redact_api_key(raw_error)
+
+    assert "secret-key-12345" not in redacted
+    assert "[REDACTED_API_KEY]" in redacted
+
+
+def test_search_google_lens_uses_visual_matches(monkeypatch):
+    import asyncio
+    from app.config import settings
+    from app.services import serpapi_service
+
+    monkeypatch.setattr(settings, "demo_mode", "off")
+    monkeypatch.setattr(settings, "serpapi_api_key", "test-key")
+
+    captured_params = {}
+
+    async def fake_request(params):
+        captured_params.update(params)
+        return {
+            "visual_matches": [
+                {
+                    "title": "Black Leather Boots",
+                    "link": "https://example.com/boots",
+                    "source": "Boot Store",
+                    "price": {"extracted_value": 4999, "currency": "INR"},
+                }
+            ]
+        }
+
+    monkeypatch.setattr(serpapi_service, "_request", fake_request)
+    serpapi_service.clear_cache()
+
+    res = asyncio.run(serpapi_service.search_google_lens(image_id="img-123"))
+    assert captured_params.get("engine") == "google_lens"
+    assert captured_params.get("type") == "visual_matches"
+    assert len(res.matches) == 1
+    assert res.matches[0].title == "Black Leather Boots"
+
+
+def test_search_google_lens_fallback_to_shopping_when_empty(monkeypatch):
+    import asyncio
+    from app.config import settings
+    from app.services import serpapi_service
+
+    monkeypatch.setattr(settings, "demo_mode", "off")
+    monkeypatch.setattr(settings, "serpapi_api_key", "test-key")
+
+    async def fake_request(params):
+        return {
+            "search_information": {"query_displayed": "Chelsea Boots"},
+            "visual_matches": [],
+        }
+
+    async def fake_shopping(query, limit=None):
+        from app.services.serpapi_service import SerpApiResult
+        from app.models.product import Product
+        return SerpApiResult(
+            [
+                Product(
+                    id="p1",
+                    title="Chelsea Boot",
+                    price=2999.0,
+                    currency="INR",
+                    source="Shoe World",
+                    link="https://example.com/chelsea",
+                )
+            ],
+            engine="google_shopping",
+        )
+
+    monkeypatch.setattr(serpapi_service, "_request", fake_request)
+    monkeypatch.setattr(serpapi_service, "search_google_shopping", fake_shopping)
+    serpapi_service.clear_cache()
+
+    res = asyncio.run(serpapi_service.search_google_lens(image_id="img-456", force_refresh=True))
+    assert len(res.matches) == 1
+    assert res.matches[0].title == "Chelsea Boot"
+    assert any("Google Shopping fallback" in note for note in res.notes)
+

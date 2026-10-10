@@ -327,3 +327,82 @@ describe('search history', () => {
     await waitFor(() => expect(result.current.history).toHaveLength(0))
   })
 })
+
+describe('search mode isolation & race conditions', () => {
+  it('keeps text search and image search states strictly separated', async () => {
+    const getFlow = renderHarness()
+
+    await act(async () => {
+      getFlow().setTextQuery('iPhone 17')
+    })
+    expect(getFlow().textQuery).toBe('iPhone 17')
+
+    await act(async () => {
+      getFlow().selectImage(makeImageFile())
+      getFlow().setImageQuery('Nike Air Max 270')
+    })
+
+    expect(getFlow().imageQuery).toBe('Nike Air Max 270')
+    expect(getFlow().textQuery).toBe('iPhone 17')
+    expect(getFlow().hasImage).toBe(true)
+
+    // Switch mode back to text: image query is not leaked
+    await act(async () => {
+      getFlow().setMode('text')
+    })
+    expect(getFlow().searchQuery).toBe('iPhone 17')
+  })
+
+  it('searches for iPhone 17 after previous sneaker search without contamination', async () => {
+    search.mockResolvedValue(makeSearchResponse({ query: 'iPhone 17' }))
+    const getFlow = renderHarness()
+
+    await act(async () => {
+      getFlow().selectImage(makeImageFile())
+      getFlow().setImageQuery('Nike sneakers')
+    })
+
+    await act(async () => {
+      await getFlow().runTextSearch('iPhone 17')
+    })
+
+    expect(search).toHaveBeenCalledWith({ query: 'iPhone 17', force_refresh: false })
+    expect(getFlow().search?.query).toBe('iPhone 17')
+    expect(getFlow().mode).toBe('text')
+    expect(getFlow().hasImage).toBe(false)
+  })
+
+  it('ignores stale asynchronous responses when newer queries are submitted', async () => {
+    let resolveFirst: (val: any) => void = () => {}
+    search.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFirst = resolve
+        }),
+    )
+    search.mockImplementationOnce(() => Promise.resolve(makeSearchResponse({ query: 'Query Two' })))
+
+    const getFlow = renderHarness()
+
+    let firstPromise: Promise<any>
+    await act(async () => {
+      firstPromise = getFlow().runTextSearch('Query One')
+    })
+
+    await act(async () => {
+      await getFlow().runTextSearch('Query Two')
+    })
+
+    expect(getFlow().search?.query).toBe('Query Two')
+
+    // Now resolve the first, stale search
+    await act(async () => {
+      resolveFirst(makeSearchResponse({ query: 'Query One' }))
+      await firstPromise
+    })
+
+    // Active result must NOT be overwritten by the stale first response
+    expect(getFlow().search?.query).toBe('Query Two')
+  })
+})
+
