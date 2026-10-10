@@ -32,8 +32,7 @@ Turn any product photo or keyword into real-time shopping listings, Google Lens 
 
 | 1. Hero & Dual Discovery Options | 2. Upload & Google Lens Visual Matches |
 | :---: | :---: |
-| ![Hero Section](<img width="1899" height="868" alt="image" src="https://github.com/user-attachments/assets/befd01a4-1b54-432f-819d-e32b86b74f66" />
-) | ![Google Lens Matches](image.png) |
+| ![alt text](image-3.png) | ![Google Lens Matches](image.png) |
 | *Direct text query chips + Drag & Drop photo uploader* | *Pixel-level matches via SerpApi Google Lens* |
 
 | 3. Live Price Comparison & Best Deal | 4. Search Product |
