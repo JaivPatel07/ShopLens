@@ -7,7 +7,7 @@ import type {
   VisualSimilarResponse,
 } from '../types/product'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
 const DEFAULT_TIMEOUT_MS = 60_000
 
 export class ApiError extends Error {
