@@ -22,9 +22,9 @@ Turn any product photo or keyword into real-time shopping listings, Google Lens 
 ## 📸 Screenshots & Video Demo
 
 ### 🎥 Video Demonstration
+
 > **Watch the full walkthrough & workflow demo**:  
-> [![ShopLens Demo Video](https://img.shields.io/badge/Demo_Video-Watch_Walkthrough-7c3aed?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/your-demo-video-link)  
-> *(Replace the link above with your hosted video or YouTube/Loom demonstration)*
+> [![ShopLens Demo Video](https://img.shields.io/badge/Demo_Video-Watch_Walkthrough-7c3aed?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/Xs_TVsaaff0)
 
 ---
 
