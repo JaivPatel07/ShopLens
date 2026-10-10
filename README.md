@@ -152,8 +152,8 @@ All endpoints are hosted under `/api`. Standard responses return normalized sche
 
 ### 1. Clone Repository & Setup Environment
 ```bash
-git clone https://github.com/JaivPatel07/SerpApi-India-Hackathon-.git
-cd SerpApi-India-Hackathon-
+git clone https://github.com/JaivPatel07/ShopLens.git
+cd ShopLens
 ```
 
 Create configuration files:
