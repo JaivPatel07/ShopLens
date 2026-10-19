@@ -1,0 +1,9 @@
+# Tag Name Generator — Python dependencies
+# Install with:  pip install -r requirements.txt
+
+streamlit>=1.36
+pandas>=2.0
+openpyxl>=3.1
+
+# Only needed to run the test suite (optional for end users)
+pytest>=8.0

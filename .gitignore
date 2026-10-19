@@ -56,3 +56,4 @@ logs/
 uploads/
 tmp/
 .DS_Store
+.venv-taggen/
